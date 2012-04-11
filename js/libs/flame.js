@@ -1125,15 +1125,34 @@ Flame.DataTableController = Flame.TableController.extend({
 Flame.ArrayTableController = Flame.DataTableController.extend(Flame.TableSortSupport, {
     content: [],  // Set to an array of objects to display (rows)
     columns: [],  // Set to an array of labels+properties to display for each object (columns)
+                  // e.g. {property: 'firstName', label: 'First Name'}
+
     headerProperty: null,  // What to display on the (row) headers
     rowHeadersClickable: false,
+
+    init: function() {
+        this._super();
+        this._setContentObserver(); // set content observer for initially given content array
+    },
 
     headers: function() {
         var headerProperty = this.get('headerProperty');
         ember_assert('headerProperty not defined for ArrayTableAdapter!', !!headerProperty);
         var rowHeadersClickable = this.get('rowHeadersClickable');
+        var self = this;
         return {
             rowHeaders: this.get('content').map(function(object, i) {
+                // headers won't update in-place, have to force rerender via observer
+                var originalValue = object.get(headerProperty);
+                var observerMethod = function() {
+                    return function(sender, key, value) {
+                        // relies on ArrayTableController#headers being recreated when headers change
+                        if (value !== originalValue) {
+                            self.refreshHeaders();
+                        }
+                    };
+                }();
+                self._setPropertyObserver(object, headerProperty, observerMethod);
                 return {
                     isClickable: rowHeadersClickable,
                     label: object.get(headerProperty),
@@ -1147,13 +1166,74 @@ Flame.ArrayTableController = Flame.DataTableController.extend(Flame.TableSortSup
     }.property('content.@each', 'columns', 'headerProperty', 'rowHeadersClickable').cacheable(),
 
     data: function() {
+        var self = this;
         var columns = this.get('columns');
-        return this.get('content').map(function(object) {
-            return columns.map(function(column) {
+        return this.get('content').map(function(object, i) {
+            return columns.map(function(column, j) {
+                // add observer for in-place cell refreshing
+                var propertyName = Ember.getPath(column, 'property');
+                var observerMethod = function() {
+                    return function(sender, key, value) {
+                        self.pushDataBatch([{path: {row: [i], column: [j]}, value: value}]);
+                    };
+                }();
+                self._setPropertyObserver(object, propertyName, observerMethod);
+
                 return Ember.get(object, Ember.getPath(column, 'property'));
             });
         });
     }.property('headers').cacheable(),
+
+    _setPropertyObserver: function(object, propertyName, observerMethod) {
+        var observerName = propertyName + "DidChangeInArrayTableController"; // extra suffix for avoiding name conflicts
+        object.removeObserver(propertyName, object, observerName);
+        object[observerName] = observerMethod;
+        object.addObserver(propertyName, object, observerName);
+    },
+
+    // Removes all observers that were added via _setPropertyObserver.
+    _removePropertyObservers: function(object) {
+        var observerRegex = /(.+)DidChangeInArrayTableController$/;
+        for (var objProperty in object) {
+            if (object.hasOwnProperty(objProperty)) {
+                if (observerRegex.test(objProperty)) {
+                    var propertyName = observerRegex.exec(objProperty)[1];
+                    object.removeObserver(propertyName, object, objProperty);
+                    delete object[objProperty];
+                }
+            }
+        }
+    },
+
+    // remove observers from objects that were removed from content array
+    _contentArrayWillChange: function(content, start, removed, added) {
+        var lim = start + removed;
+        for (var i = start; i < lim; i++) {
+            this._removePropertyObservers(content.objectAt(i));
+        }
+    },
+
+    _setContentObserver: function() {
+        var content = this.get('content');
+        if (content) {
+            content.addArrayObserver(this, {
+                willChange: '_contentArrayWillChange',
+                didChange: Ember.K
+            });
+        }
+    }.observes('content'),
+
+    _removeContentObserver: function() {
+        var content = this.get('content');
+        if (content) {
+            content.removeArrayObserver(this, {
+                willChange: '_contentArrayWillChange',
+                didChange: Ember.K
+            });
+            // have to remove observers from the old array's objects as well
+            content.forEach(this._removePropertyObservers, this);
+        }
+    }.observesBefore('content'),
 
     sortContent: function(sortDescriptor) {
         var property = sortDescriptor.header.get('property');
@@ -1225,19 +1305,19 @@ Ember.View.reopen({
     },
 
     handleKeyEvent: function(event, view) {
-        var scEvent = null;
+        var emberEvent = null;
         switch (event.type) {
-            case "keydown": scEvent = 'keyDown'; break;
-            case "keypress": scEvent = 'keyPress'; break;
+            case "keydown": emberEvent = 'keyDown'; break;
+            case "keypress": emberEvent = 'keyPress'; break;
         }
-        var handler = scEvent ? this.get(scEvent) : null;
-        if (window.FlameD && scEvent) FlameD.logEvent(event, scEvent, this);
+        var handler = emberEvent ? this.get(emberEvent) : null;
+        if (window.FlameInspector && emberEvent) FlameInspector.logEvent(event, emberEvent, this);
         if (handler) {
             // Note that in jQuery, the contract is that event handler should return
-            // true to allow default handling, false to prevent it. But in SC, event handlers return true if they handled the event,
+            // true to allow default handling, false to prevent it. But in Ember, event handlers return true if they handled the event,
             // false if they didn't, so we want to invert that return value here.
             return !handler.call(Flame.keyResponderStack.current(), event, Flame.keyResponderStack.current());
-        } else if (scEvent === "keyDown" && this.interpretKeyEvents(event)) { // Try to hand down the event to a more specific key event handler
+        } else if (emberEvent === "keyDown" && this.interpretKeyEvents(event)) { // Try to hand down the event to a more specific key event handler
             return false;
         } else if (this.get('parentView')) {
             return this.get('parentView').handleKeyEvent(event, view);
@@ -1424,7 +1504,7 @@ Flame.EventManager = {
         // returns true, returns the view. If the method returns false, recurses on the parent view. If no
         // view handles the event, returns false.
         _dispatch: function(eventName, event, view) {
-            if (window.FlameD) FlameD.logEvent(event, eventName, view);
+            if (window.FlameInspector) FlameInspector.logEvent(event, eventName, view);
             var handler = view.get(eventName);
             if (handler) {
                 var result = handler.call(view, event, view);
@@ -1878,7 +1958,7 @@ Flame.View = Ember.ContainerView.extend(Flame.LayoutSupport, Flame.EventManager,
     init: function() {
         this._super();
 
-        // There's a 'gotcha' in SC2 that we need to work around here: an Ember.View does not have child views in the sense
+        // There's a 'gotcha' in Ember that we need to work around here: an Ember.View does not have child views in the sense
         // that you cannot define them yourself. But when used with a handlebars template, Ember.View uses child views
         // internally to keep track of dynamic portions in the template so that they can be updated in-place in the DOM.
         // The template rendering process adds this kind of child views on the fly. The problem is that we need to extend
@@ -2162,7 +2242,7 @@ Flame.Panel = Flame.RootView.extend({
     },
 
     _focusDefaultInput: function() {
-        // Let SC render the element before we focus it
+        // Let Ember render the element before we focus it
         Ember.run.next(this, function() {
             var defaultFocus = this.firstDescendantWithProperty('isDefaultFocus');
             if (defaultFocus) { defaultFocus.becomeKeyResponder(); }
@@ -2942,7 +3022,7 @@ Flame.ListViewDragHelper = Ember.Object.extend({
         this.set('clone', clone);
         this._updateCss();
 
-        // As the clone is not linked to any SC view, we have to add custom event handlers on it
+        // As the clone is not linked to any Ember view, we have to add custom event handlers on it
         var listView = this.get('listView');
         clone.mousemove(function(event) {
             listView.mouseMove.apply(listView, arguments);
@@ -3256,6 +3336,7 @@ Flame.ListViewDragHelper.Path = Ember.Object.extend({
         return true;
     }
 });
+
 
 
 
@@ -3641,7 +3722,7 @@ Flame.ScrollView = Flame.View.extend({
 
 
 
-/* Only to be used in Flame.MenuView. Represent menu items with normal JS objects as creation of one SC object took
+/* Only to be used in Flame.MenuView. Represent menu items with normal JS objects as creation of one Ember object took
  * 3.5 ms on fast IE8 machine.
  */
 
@@ -4520,6 +4601,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
     _updateCounter: 0,
     selectedCell: null,
     editValue: null,
+    contentBinding: '^content',
 
     initialState: 'loaded',
 
@@ -4637,7 +4719,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             if (event.metaKey) { return false; }
             if (key.match(/[a-zA-Z0-9+*\-\[\/\=]/)) {
                 var owner = this.get('owner');
-                owner.set('editValue', '');
+                owner.set('editValue', key);
                 this.startEdit();
                 return true;
             }
@@ -4782,44 +4864,48 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             var selection = owner.get('selection');
             var options = dataCell.options();
 
-            if (options) { // Drop down menu for fields with a fixed set of options
-                var menu = Flame.MenuView.create({
-                    layout: { width: 220 },
-                    parent: owner, // Reference to the cube table view
-                    items: options.map(function(o) {
-                        return {
-                            title: o[0],
-                            value: o[1],
-                            isChecked: o[1] === dataCell.value,
-                            action: function() { owner.didSelectMenuItem(this.get('value')); }
-                        };
-                    }),
-                    // Make the cube table view go back to the selected state when the menu is closed
-                    close: function() { this.get('parent').gotoState('selected'); this._super(); }});
-                menu.popup(selectedCell);
-            } else { // Normal edit field for everything else
-                var backgroundColor = selectedCell.css('backgroundColor');
+            if (!dataCell.showEditor(selectedCell, owner, owner.get('content'))) {
+                // No special editor, use one of the defaults
+                if (options) { // Drop down menu for fields with a fixed set of options
+                    var menu = Flame.MenuView.create({
+                        layout: { width: 220 },
+                        parent: owner, // Reference to the cube table view
+                        items: options.map(function(o) {
+                            return {
+                                title: o[0],
+                                value: o[1],
+                                isChecked: o[1] === dataCell.value,
+                                action: function() { owner.didSelectMenuItem(this.get('value')); }
+                            };
+                        }),
+                        // Make the cube table view go back to the selected state when the menu is closed
+                        close: function() { this.get('parent').gotoState('selected'); this._super(); }
+                    });
+                    menu.popup(selectedCell);
+                } else { // Normal edit field for everything else
+                    var backgroundColor = selectedCell.css('backgroundColor');
 
-                // If background color is unset, it defaults to transparent. Different browser have different
-                // ways of saying "transparent". Let's assume "transparent" actually means "white".
-                if (['rgba(0, 0, 0, 0)', 'transparent'].contains(backgroundColor)) {
-                    backgroundColor = 'white';
+                    // If background color is unset, it defaults to transparent. Different browser have different
+                    // ways of saying "transparent". Let's assume "transparent" actually means "white".
+                    if (['rgba(0, 0, 0, 0)', 'transparent'].contains(backgroundColor)) {
+                        backgroundColor = 'white';
+                    }
+
+                    editCell.css({
+                        left: parseInt(selection.css('left'), 10) + parseInt(selection.css('border-left-width'), 10) + 'px',
+                        top: parseInt(selection.css('top'), 10) + parseInt(selection.css('border-top-width'), 10) + 'px',
+                        width: selection.outerWidth() - parseInt(selection.css('border-left-width'), 10) - parseInt(selection.css('border-right-width'), 10) + 'px',
+                        height: selection.outerHeight() - parseInt(selection.css('border-top-width'), 10) - parseInt(selection.css('border-bottom-width'), 10) + 'px',
+                        backgroundColor: backgroundColor
+                    });
+                    var editValue = owner.editableValue(dataCell);
+
+                    editCell.val(editValue);
+                    owner.set('editValue', null);
+                    editCell.show();
+                    // Put cursor at end of value
+                    editCell.selectRange(1024, 1024);
                 }
-
-                editCell.css({
-                    left: parseInt(selection.css('left'), 10) + parseInt(selection.css('border-left-width'), 10) + 'px',
-                    top: parseInt(selection.css('top'), 10) + parseInt(selection.css('border-top-width'), 10) + 'px',
-                    width: selection.outerWidth() - parseInt(selection.css('border-left-width'), 10) - parseInt(selection.css('border-right-width'), 10) + 'px',
-                    height: selection.outerHeight() - parseInt(selection.css('border-top-width'), 10) - parseInt(selection.css('border-bottom-width'), 10) + 'px',
-                    backgroundColor: backgroundColor
-                });
-                var editValue = owner.editableValue(dataCell);
-
-                editCell.val(editValue);
-                owner.set('editValue', null);
-                editCell.show();
-                // Put cursor at end of value
-                editCell.selectRange(1024, 1024);
             }
         },
 
@@ -4833,7 +4919,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
     }),
 
     didSelectMenuItem: function(value) {
-        var editField = this.getPath('editField');
+        var editField = this.get('editField');
         editField.val(value || '');
         this._confirmEdit();
         this.invokeStateMethodByValuesOn('moveRight', 'moveDown');
@@ -4914,7 +5000,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
         var dataCell = data[rowIndex][columnIndex];
 
         // Skip saving if value has not been changed
-        if (dataCell.editableValue() === newValue) {
+        if (Ember.compare(dataCell.editableValue(), newValue) === 0) {
             return true;
         } else if (dataCell.validate(newValue)) {
             var cellUpdateDelegate = this.get('cellUpdateDelegate');
@@ -4957,15 +5043,6 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
 
     isCellSelectable: function(cell) {
         return cell && cell[0] && cell[0].nodeName === 'TD';
-    },
-
-    keyPress: function(event) {
-        if (this.interpretKeyEvents(event)) {
-            return true;
-        } else {
-            this.invokeStateMethod('keyPress', event);
-            return false;
-        }
     },
 
     updateColumnWidth: function(index, width) {
@@ -5120,13 +5197,7 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
         totalRowIdsBinding: '^content.totalRowIds',
         totalColumnIdsBinding: '^content.totalColumnIds',
         cellUpdateDelegateBinding: '^cellUpdateDelegate',
-        allowRefreshBinding: '^allowRefresh',
-        cellsMarkedForUpdateBinding: '^content.cellsMarkedForUpdate',
-        _cellsDidChange: function() {
-            if (this.get('allowRefresh')) {
-                this._super();
-            }
-        }.observes('dirtyCells', 'allowRefresh')
+        cellsMarkedForUpdateBinding: '^content.cellsMarkedForUpdate'
     }),
 
     rowDepth: function() {
@@ -5216,6 +5287,16 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
         },
 
         mouseUp: function(event) {
+            var owner = this.get('owner');
+            if (owner.get('type') === 'column') {
+                var resizeDelegate = owner.get('resizeDelegate');
+                if (resizeDelegate && resizeDelegate.columnResized) {
+                    var cell = owner.get('resizingCell');
+                    var width = parseInt(cell.css('width'), 10);
+                    var index = parseInt(cell.attr('data-leaf-index'), 10);
+                    resizeDelegate.columnResized(index, width);
+                }
+            }
             this.gotoState('idle');
             return true;
         }
@@ -5227,11 +5308,6 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
         var table = this.get('childViews')[0];
         var width = parseInt(cell.css('width'), 10);
         var index = parseInt(cell.attr('data-leaf-index'), 10);
-        var resizeDelegate = this.get('resizeDelegate');
-        if (resizeDelegate && resizeDelegate.columnResized) {
-            resizeDelegate.columnResized(index, width);
-
-        }
         if (jQuery.browser.webkit || jQuery.browser.msie) { width += 4; }
         if (jQuery.browser.mozilla) { width -= 2; }
         table.updateColumnWidth(index, width);
@@ -5261,11 +5337,9 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
     },
 
     _headersDidChange: function() {
-        if (this.get('allowRefresh')) {
-            this.rerender();
-        }
+        this.rerender();
         // When the headers change, fully re-render the view
-    }.observes('contentAdapter.headers', 'allowRefresh'),
+    }.observes('contentAdapter.headers'),
 
     render: function(buffer) {
         this._renderElementAttributes(buffer);
@@ -5276,7 +5350,7 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
         if (!headers) {
             return; // Nothing to render
         }
-        // HomeView panel label
+
         if (this.getPath('content.title')) {
             buffer = buffer.push('<div class="panel-title">%@</div>'.fmt(this.getPath('content.title')));
             didRenderTitle = true;
@@ -5286,24 +5360,23 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
         var columnHeaderRows = this.getPath('contentAdapter.columnHeaderRows');
         var rowHeaderRows = this.getPath('contentAdapter.rowHeaderRows');
         var columnHeaderHeight = columnHeaderRows.maxDepth * 21 + 1 + columnHeaderRows.maxDepth;
-        // XXX What is this? Why does column WIDTH affect row HEIGHT?
-        var rowHeight = rowHeaderRows.maxDepth * defaultColumnWidth + 1 + (isSimpleTable ? 5 : 0);
+        var leftOffset = rowHeaderRows.maxDepth * defaultColumnWidth + 1 + (isSimpleTable ? 5 : 0);
         var topOffset = didRenderTitle ? 18 : 0;
 
         if (!isSimpleTable) {
             // Top left corner of the headers
-            buffer = buffer.push('<div class="table-corner" style="top: %@px; left: 0px; height: %@px; width: %@px;"></div>'.fmt(topOffset, columnHeaderHeight, defaultColumnWidth));
+            buffer = buffer.push('<div class="table-corner" style="top: %@px; left: 0px; height: %@px; width: %@px;"></div>'.fmt(topOffset, columnHeaderHeight, leftOffset));
             // Column headers
-            buffer = this._renderHeader(buffer, 'column', rowHeight, defaultColumnWidth);
+            buffer = this._renderHeader(buffer, 'column', leftOffset, defaultColumnWidth);
             topOffset += columnHeaderHeight;
         }
         // Row headers
         buffer = this._renderHeader(buffer, 'row', topOffset, defaultColumnWidth);
 
         // Scrollable div
-        buffer = buffer.begin('div').attr('style', 'overflow: auto; bottom: 0px; top: %@px; left: %@px; right: 0px;'.fmt(topOffset, rowHeight));
+        buffer = buffer.begin('div').attr('style', 'overflow: auto; bottom: 0px; top: %@px; left: %@px; right: 0px;'.fmt(topOffset, leftOffset));
         buffer = buffer.attr('class', 'scrollable');
-        // There should really only be one child view, the CubeTableDataView
+        // There should really only be one child view, the TableDataView
         this.forEachChildView(function(view) {
             view.renderToBuffer(buffer);
         });
@@ -5749,8 +5822,7 @@ Flame.Validator = Ember.Object.extend({
  *  You must provide a 'validations' hash, with the keys defining each property of your model to validate,
  *  and the values the validation logic.
  *
- *  The validation logic should be defined either as an SC validator class, a Flame validator singleton, an anonymous
- *  function, or a hash.
+ *  The validation logic should be defined either as a Flame validator singleton, an anonymous function, or a hash.
  *
  *  Validation is done on-demand, demand being the first call to foo.get("barIsValid") or foo.get("isValid").
  *  Thus we don't validate stuff that just goes to DataStore but only the thing we use and about whose validity we're
