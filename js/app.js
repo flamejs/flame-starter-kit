@@ -1,7 +1,6 @@
-var App = Em.Application.create();
+var App = Ember.Application.create();
 
 App.RootView = Flame.RootView.extend({
-    layout: { top: 0, left: 0, right: 0, bottom: 0 },
     childViews: 'splitView'.w(),
 
     splitView: Flame.HorizontalSplitView.extend({
@@ -21,10 +20,9 @@ App.RootView = Flame.RootView.extend({
                 layout: { left: 5, right: 5, top: 40 },
                 title: 'Flame!',
                 action: function() {
-                    Flame.AlertPanel.create({
+                    Flame.AlertPanel.info({
                         title: 'Hi!',
-                        message: 'This is a Flame.AlertPanel',
-                        isCancelVisible: false
+                        message: 'This is a Flame.AlertPanel'
                     }).popup();
                 }
             })
