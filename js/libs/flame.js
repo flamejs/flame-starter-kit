@@ -7,7 +7,7 @@
 
 
 
-window.Flame = Ember.Object.create({});
+window.Flame = Ember.Namespace.create({});
 
 
 // In IE7, Range is not defined, which Metamorph handles with a fallback
@@ -97,8 +97,13 @@ Ember.mixin(Ember.Binding.prototype, {
 
     // If value evaluates to true, return trueValue, otherwise falseValue
     transformTrueFalse: function(trueValue, falseValue) {
-        return this.transform(function(value, binding) {
-            return value ? trueValue : falseValue;
+        return this.transform({
+            to: function(value) {
+                return value ? trueValue : falseValue;
+            },
+            from: function(value) {
+                return value === trueValue;
+            }
         });
     },
 
@@ -151,9 +156,16 @@ if (Ember.$.browser.msie && Ember.$.browser.version < 10) {
 }
 
 ;
+Flame.imagePath = 'images/';
+
+
 Ember.mixin(Flame, {
     image: function(imageUrl) {
-        return (typeof FlameImageUrlPrefix === 'undefined' ? 'images/' : FlameImageUrlPrefix) + imageUrl;
+      if (typeof FlameImageUrlPrefix === 'undefined') {
+          return (Flame.imagePath || '') + imageUrl;
+      } else {
+          return FlameImageUrlPrefix + imageUrl;
+      }
     }
 });
 
@@ -295,9 +307,13 @@ Flame.reopen({
         var bindingPropertyName = propertyName + 'Binding';
 
         while (!Ember.none(cur)) {
-            if (cur.hasOwnProperty(propertyName) ||
-                cur.constructor.prototype.hasOwnProperty(propertyName) ||
-                cur.get(bindingPropertyName)) {
+            // It seems that earlier (at least 0.9.4) the constructor of the view contained pleothra of properties,
+            // but nowadays (at least 0.9.6) the properties are there throughout the prototype-chain ant not in the
+            // last prototype. Thus testing whether current objects prototype has the property does not give correct
+            // results.
+            // So we check if the current object has the property (perhaps some of its prototypes has it) or it has
+            // a binding for the property and in case it has, this object is the target of our binding.
+            if (typeof Ember.get(cur, propertyName) !== "undefined" || typeof Ember.get(cur, bindingPropertyName) !== "undefined") {
                 return path.reverse().join('.');
             }
             path.push('parentView');
@@ -1291,7 +1307,7 @@ Flame.ActionSupport = {
         return false;
     }
 };
-Ember.View.reopen({
+var eventHandlers = {
     interpretKeyEvents: function(event) {
         var mapping = event.shiftKey ? Flame.MODIFIED_KEY_BINDINGS : Flame.KEY_BINDINGS;
         var eventName = mapping[event.keyCode];
@@ -1323,7 +1339,10 @@ Ember.View.reopen({
             return this.get('parentView').handleKeyEvent(event, view);
         }
     }
-});
+};
+
+Ember.View.reopen(eventHandlers);
+Ember.TextSupport.reopen(eventHandlers);
 
 Flame.KEY_BINDINGS = {
     8: 'deleteBackward',
@@ -1567,7 +1586,7 @@ Flame.FullscreenSupport = {
             layout: { right: 3, top: 3, width: 24, height: 24 },
             classNames: ['flame-fullscreen-close'],
             // XXX image support in ButtonView?
-            handlebars: "<img style='margin: 3px;' src='%@'>".fmt(Flame.image('full_screen_off.png')),
+            handlebars: "<img style='margin: 3px;' src='%@'>".fmt(Flame.image('fullscreen_off.png')),
             action: function() {
                 this.getPath('owner').exitFullscreen();
             }
@@ -1948,7 +1967,7 @@ Flame.reopen({
     FOCUS_RING_MARGIN: 3
 });
 
-// Base class for Flame views. Can be used to hold child views or render a template. In SC2, you normally either use
+// Base class for Flame views. Can be used to hold child views or render a template. In Ember, you normally either use
 // Ember.View for rendering a template or Ember.ContainerView to render child views. But we want to support both here, so
 // that we can use e.g. Flame.ListItemView for items in list views, and the app can decide whether to use a template or not.
 Flame.View = Ember.ContainerView.extend(Flame.LayoutSupport, Flame.EventManager, {
@@ -1991,7 +2010,8 @@ Flame.View = Ember.ContainerView.extend(Flame.LayoutSupport, Flame.EventManager,
         }
     },
 
-    template: function() {
+    template: function(propertyName, value) {
+        if (propertyName === "template" && value !== undefined) return value;
         var str = this.get('handlebars');
         return str ? this._compileTemplate(str) : null;
     }.property('templateName', 'handlebars').cacheable(),
@@ -2181,9 +2201,9 @@ Flame.Panel = Flame.RootView.extend({
             if (position & Flame.POSITION_MIDDLE) {
                 layout.left = layout.left - (layout.width / 2) + (anchorElement.outerWidth() / 2);
             }
-        } else if (position & Flame.POSITION_RIGHT) {
+        } else if (position & (Flame.POSITION_RIGHT | Flame.POSITION_LEFT)) {
             layout.top = offset.top;
-            layout.left = offset.left + anchorElement.outerWidth();
+            layout.left = offset.left + ((position & Flame.POSITION_RIGHT) ? anchorElement.outerWidth() : -layout.width);
             if (position & Flame.POSITION_MIDDLE) {
                 layout.top = layout.top - (layout.height / 2) + (anchorElement.outerHeight() / 2);
             }
@@ -2469,23 +2489,47 @@ Flame.CheckboxView = Flame.ButtonView.extend({
 });
 
 Flame.CollectionView =  Ember.CollectionView.extend(Flame.LayoutSupport, Flame.EventManager, {
-    classNames: ['flame-list-view']
+    classNames: ['flame-list-view'],
+
+    init: function() {
+        this._super();
+        var emptyViewClass = this.get('emptyView');
+        if (emptyViewClass) {
+            emptyViewClass.reopen({
+                // Ensures removal if orphaned, circumventing the emptyView issue
+                // (https://github.com/emberjs/ember.js/issues/233)
+                ensureEmptyViewRemoval: function() {
+                    if (!this.get('parentView')) {
+                        Ember.run.next(this, function() {
+                            if (!this.get('isDestroyed')) this.remove();
+                        });
+                    }
+                }.observes('parentView')
+            });
+
+        }
+    }
+
 });
 
 Flame.DisclosureView = Flame.LabelView.extend({
     classNames: ['flame-disclosure-view'],
-    buttonBinding: Ember.Binding.from('visibilityTarget').transformTrueFalse(
-        Flame.image('disclosure_triangle_down.png'),
-        Flame.image('disclosure_triangle_left.png')
-    ),
-    handlebars: '<img {{bindAttr src="button"}}> {{value}}',
+
+    imageExpanded: Flame.image('disclosure_triangle_down.png'),
+    imageCollapsed: Flame.image('disclosure_triangle_left.png'),
+
+    image: function() {
+        return this.get('visibilityTarget') ? this.get('imageExpanded') : this.get('imageCollapsed');
+    }.property('visibilityTarget', 'imageExpanded', 'imageCollapsed'),
+
+    handlebars: '<img {{bindAttr src="image"}}> {{value}}',
+
     action: function() {
         var value = this.getPath('visibilityTarget');
         this.setPath('visibilityTarget', !value);
         return true;
     }
 });
-
 //
 // You must set on object to 'object' that the form manipulates (or use a binding)
 // Optionally you can set a defaultTarget, that will be used to set the default target for any actions
@@ -2515,11 +2559,6 @@ Flame.FormView = Flame.View.extend({
     _focusRingMargin: 3,
 
     _errorViews: [],
-
-    yesNoItems: [
-        {title: 'Yes', value: true},
-        {title: 'No', value: false}
-    ],
 
     init: function() {
         this._super();
@@ -2557,13 +2596,16 @@ Flame.FormView = Flame.View.extend({
         if (Ember.none(descriptor.label)) {
             return this._createChildViewWithLayout(control, this, this.get('leftMargin') + this._focusRingMargin, this.get('rightMargin') + this._focusRingMargin);
         }
+        if (descriptor.type === 'checkbox') {
+            return this._createChildViewWithLayout(control, this, this.get('leftMargin') + this.labelWidth + this.columnSpacing - 4, this._focusRingMargin);
+        }
 
         var view = {
             layout: { left: this.get('leftMargin'), right: this.get('rightMargin') },
             layoutManager: Flame.VerticalStackLayoutManager.create({ topMargin: this._focusRingMargin, spacing: 0, bottomMargin: this._focusRingMargin }),
             childViews: ['label', 'control'],
 
-            isVisible: descriptor.get('isVisible') || true,
+            isVisible: descriptor.get('isVisible') === undefined ? true : descriptor.get('isVisible'),
 
             label: this._buildLabel(descriptor),
             control: function () {
@@ -2736,6 +2778,9 @@ Flame.FormView = Flame.View.extend({
                     return val === null ? '' : val;
                 }}));
             case 'checkbox':
+                settings.title = descriptor.label;
+                settings.isSelectedBinding = settings.valueBinding;
+                delete settings.valueBinding;
                 return Flame.CheckboxView.extend(settings);
             case 'select':
                 settings.itemValueKey = descriptor.itemValueKey || "value";
@@ -2748,11 +2793,6 @@ Flame.FormView = Flame.View.extend({
                     settings.items = descriptor.options;
                 }
                 return Flame.SelectButtonView.extend(settings);
-            case 'yesno':
-                settings.itemTitleKey = "title";
-                settings.itemValueKey = "value";
-                settings.items = this.get('yesNoItems');
-                return Flame.SelectButtonView.extend(settings);
         }
         throw 'Invalid control type %@'.fmt(type);
     },
@@ -2760,7 +2800,6 @@ Flame.FormView = Flame.View.extend({
     willDestroyElement: function() {
         this._errorViews.forEach(function(e) { e.remove(); });
     }
-
 });
 Flame.HorizontalSplitView = Flame.View.extend({
     classNames: ['flame-horizontal-split-view'],
@@ -3360,6 +3399,14 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
     initialState: 'idle',
     reorderDelegate: null,
 
+    itemViewClass: Flame.ListItemView.extend({
+        templateContext: function(key, value) {
+            return value !== undefined ? value : Ember.get(this, 'content');
+        }.property('content').cacheable(),
+        templateBinding: "parentView.template",
+        handlebars: "{{title}}"
+    }),
+
     selectIndex: function(index) {
         if (!this.get('allowSelection')) return false;
         var content = this.get('content');
@@ -3862,8 +3909,7 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
                 // Push strings to rendering buffer with one pushObjects call so we don't get one arrayWill/DidChange
                 // per menu item.
                 var tempArr = items.map(function(menuItem) { return menuItem.renderToElement(); });
-                var alreadyRenderedChildren = renderingBuffer.get('childBuffers');
-                alreadyRenderedChildren.pushObjects(tempArr);
+                renderingBuffer.push(tempArr.join(''));
             }
         });
     },
@@ -4209,14 +4255,18 @@ Flame.Popover = Flame.Panel.extend({
     _positionArrow: function() {
         var anchor = this.get('anchor');
         var position = this.get('position');
+        var arrow = this.$('img.arrow');
         var offset = anchor.offset();
         var arrowOffset;
         if (position & (Flame.POSITION_ABOVE | Flame.POSITION_BELOW)) {
             arrowOffset = offset.left + (anchor.outerWidth() / 2) - parseInt(this.$().css('left').replace('px', ''), 10) - 15;
-            this.$('img.arrow').css({ left: arrowOffset + 'px' });
+            arrow.css({ left: arrowOffset + 'px' });
         } else {
             arrowOffset = offset.top + (anchor.outerHeight() / 2) - parseInt(this.$().css('top').replace('px', ''), 10) - 15;
-            this.$('img.arrow').css({ top: arrowOffset + 'px' });
+            arrow.css({ top: arrowOffset + 'px' });
+            if (position & Flame.POSITION_LEFT) {
+                arrow.css({ left: this.getPath('layout.width') - 1 + 'px' });
+            }
         }
     },
 
@@ -4234,7 +4284,7 @@ Flame.Popover = Flame.Panel.extend({
             this.set('arrowPosition', 'below');
             this.set('image', Flame.image('arrow_up.png'));
         } else if (position & Flame.POSITION_LEFT) {
-            layout.right += 15;
+            layout.left -= 15;
             this.set('arrowPosition', 'left');
             this.set('image', Flame.image('arrow_right.png'));
         } else if (position & Flame.POSITION_RIGHT) {

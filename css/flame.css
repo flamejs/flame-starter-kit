@@ -80,11 +80,13 @@ body {
 
 .flame-button-view {
   border: 1px solid #999;
+  border-bottom-color: #888;
   border-radius: 4px;
   background: #cccccc;
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='ie-hex-str(#eeeeee)', endColorstr='ie-hex-str(#cccccc)');
   background: -webkit-gradient(linear, left top, left bottom, from(#eeeeee), to(#cccccc));
-  background: -moz-linear-gradient(top, #eeeeee, #cccccc); }
+  background: -moz-linear-gradient(top, #eeeeee, #cccccc);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75); }
 
 .flame-button-view.is-hovered {
   background: #d4d4d4;
@@ -161,7 +163,8 @@ body {
   filter: none;
   background-color: transparent;
   border: none;
-  box-shadow: none; }
+  box-shadow: none;
+  line-height: 20px; }
   .flame-button-view.flame-checkbox-view.is-selected .flame-checkbox-box {
     background: #8ab2e6;
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='ie-hex-str(#aacef9)', endColorstr='ie-hex-str(#8ab2e6)');
@@ -275,26 +278,24 @@ body {
     z-index: 9999; }
     .flame-popover .arrow.below {
       width: 31px;
-      height: 15px;
+      height: 16px;
       top: -14px; }
     .flame-popover .arrow.left {
       height: 31px;
-      width: 15px;
-      left: 14px; }
+      width: 15px; }
     .flame-popover .arrow.right {
       height: 31px;
       width: 15px;
       left: -14px; }
     .flame-popover .arrow.above {
       width: 31px;
-      height: 15px;
-      top: 14px; }
+      height: 15px; }
   .flame-popover > .flame-view {
     background-color: #efefef;
     border: 1px solid #9f9f9f !important;
     border-radius: 4px;
-    -moz-box-shadow: 0px 0px 5px rgba(50, 50, 50, 0.4);
-    -webkit-box-shadow: 0px 0px 10px rgba(50, 50, 50, 0.4); }
+    -webkit-box-shadow: 0px 0px 10px rgba(50, 50, 50, 0.4), inset 0 1px white;
+    -moz-box-shadow: 0px 0px 5px rgba(50, 50, 50, 0.4), inset 0 1px white; }
 
 .flame-alert-panel .flame-alert-panel-title {
   font-size: 16px; }
