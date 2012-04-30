@@ -7,6 +7,7 @@
 
 
 
+
 window.Flame = Ember.Namespace.create({});
 
 
@@ -142,6 +143,152 @@ Ember.mixin(Ember.Binding.prototype, {
         });
     }
 });
+/*
+ Converts height, width, left, right,top, bottom, centerX and centerY
+ to a layout hash used in Flame.View
+*/
+
+function handleLayoutHash(hash) {
+    var layout = null;
+    if (hash.width > 0 || hash.height > 0 || hash.top > 0 || hash.bottom > 0 || hash.left > 0 || hash.right > 0 || hash.centerX !== null || hash.centerY !== null) {
+        layout = { width: hash.width, height: hash.height, bottom: hash.bottom, top: hash.top, left: hash.left, right: hash.right, centerX: hash.centerX, centerY: hash.centerY };
+    }
+    return layout;
+}
+
+/*
+ Usage:
+   {{flameView Flame.ButtonView top=10 bottom=20 title="Save"}}
+*/
+Ember.Handlebars.registerHelper('flameView', function(path, options) {
+    ember_assert("The view helper only takes a single argument", arguments.length <= 2);
+    // If no path is provided, treat path param as options.
+    if (path && path.data && path.data.isRenderData) {
+        options = path;
+        path = "Flame.View";
+    }
+    var hash = options.hash;
+
+    hash.layout = handleLayoutHash(hash);
+
+    Ember.Handlebars.ViewHelper.helper(this, path, options);
+});
+
+/*
+  Usage:
+   {{#tabView height="300" width="300"}}
+      {{#tab title="One" value="one"}}
+        Content tab One
+      {{/tab}}
+      {{#tab title="Two" value="two"}}
+        Content tab Two
+      {{/tab}}
+    {{/tabView}}
+*/
+Ember.Handlebars.registerHelper("tabView", function(path) {
+    var options = path;
+    var hash = options.hash;
+
+    hash.layout = handleLayoutHash(hash);
+
+    var tab_view = Flame.TabView.create(hash);
+
+    var template = path.fn;
+
+    if (template) {
+        var context = tab_view.get('templateContext'),
+            data = { buffer: [], view: tab_view };
+
+        template(context, { data: data });
+    }
+
+    path.data.view.appendChild(tab_view);
+});
+
+Ember.Handlebars.registerHelper('tab', function(path) {
+    var tabView = path.data.view;
+    var hash = path.hash;
+    var tab = hash;
+    var options = path;
+
+    tabView.set(hash.value, Flame.View.extend({
+        template: options.fn
+    }));
+
+
+    if (tabView.get('tabs') === null) {
+        tabView.set('tabs', Ember.A([]));
+    }
+
+    tabView.get('tabs').pushObject (hash);
+});
+
+/*
+  Usage:
+   {{#panelView height="200" width="300" title="Nice" allowMoving="true" centerX=0 centerY=-50 isModal=true allowClosingByClickingOutside=true}}
+        content
+   {{/panelView}}
+*/
+Ember.Handlebars.registerHelper("panelView", function(path){
+    var options = path;
+    var hash = options.hash;
+
+    hash.layout = handleLayoutHash(hash);
+
+    var template = path.fn;
+    if (template) {
+        hash.contentView = Flame.View.create({layout: { top: 26, bottom: 0, left: 0, right: 0}, "template" : template});
+    }
+
+    var view = Flame.Panel.create(hash);
+
+    view.appendTo('body');
+});
+
+/*
+  Usage:
+    {{#table height="200" width="300" headerProperty="firstName" contentBinding="App.tableArray.content" controller="Flame.ArrayTableController"}}
+      {{column label="First Name" property="firstName"}}
+      {{column label="Second" property="lastName"}}
+    {{/table}}
+*/
+Ember.Handlebars.registerHelper("tableView", function(path){
+    var options = path;
+    var hash = options.hash;
+
+    hash.layout = handleLayoutHash(hash);
+
+    var template = path.fn;
+
+    if (template) {
+        var data = { buffer: [], columns: Ember.A() };
+
+        template(null, { data: data });
+        hash.columns = data.columns;
+    }
+
+    hash.content = Ember.getPath(hash.controller).create({
+        headerProperty: hash.headerProperty,
+        columns: hash.columns,
+        contentBinding: hash.contentBinding
+    });
+
+    var view = Flame.TableView.create({
+        content: hash.content,
+        layout: hash.layout
+    });
+
+    path.data.view.appendChild(view);
+});
+
+Ember.Handlebars.registerHelper('column', function(path) {
+    var columns = path.data.columns;
+    var hash = path.hash;
+    var options = path;
+
+    columns.pushObject(hash);
+});
+
 // IE < 10 doesn't support -ms-user-select CSS property, so we need to use onselectstart event to stop the selection
 if (Ember.$.browser.msie && Ember.$.browser.version < 10) {
     Ember.$(function() {
@@ -5220,7 +5367,8 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
     columnHeader: null, // the column header table element
     tableCorner: null,
 
-    isSimpleTable: false,
+    renderColumnHeader: true,
+    renderRowHeader: true,
     isRowHeaderClickable: true,
     isResizable: true,
     allowSelection: false,
@@ -5393,7 +5541,8 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
 
     render: function(buffer) {
         this._renderElementAttributes(buffer);
-        var isSimpleTable = this.get('isSimpleTable');
+        var renderColumnHeader = this.get('renderColumnHeader');
+        var renderRowHeader = this.get('renderRowHeader');
         var didRenderTitle = false;
 
         var headers = this.getPath('contentAdapter.headers');
@@ -5410,18 +5559,23 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
         var columnHeaderRows = this.getPath('contentAdapter.columnHeaderRows');
         var rowHeaderRows = this.getPath('contentAdapter.rowHeaderRows');
         var columnHeaderHeight = columnHeaderRows.maxDepth * 21 + 1 + columnHeaderRows.maxDepth;
-        var leftOffset = rowHeaderRows.maxDepth * defaultColumnWidth + 1 + (isSimpleTable ? 5 : 0);
+        var leftOffset = 0;
+        if (renderRowHeader) {
+            leftOffset = rowHeaderRows.maxDepth * defaultColumnWidth + 1 + (renderColumnHeader ? 0 : 5);
+        }
         var topOffset = didRenderTitle ? 18 : 0;
 
-        if (!isSimpleTable) {
+        if (renderColumnHeader) {
             // Top left corner of the headers
             buffer = buffer.push('<div class="table-corner" style="top: %@px; left: 0px; height: %@px; width: %@px;"></div>'.fmt(topOffset, columnHeaderHeight, leftOffset));
             // Column headers
             buffer = this._renderHeader(buffer, 'column', leftOffset, defaultColumnWidth);
             topOffset += columnHeaderHeight;
         }
-        // Row headers
-        buffer = this._renderHeader(buffer, 'row', topOffset, defaultColumnWidth);
+        if (renderRowHeader) {
+            // Row headers
+            buffer = this._renderHeader(buffer, 'row', topOffset, defaultColumnWidth);
+        }
 
         // Scrollable div
         buffer = buffer.begin('div').attr('style', 'overflow: auto; bottom: 0px; top: %@px; left: %@px; right: 0px;'.fmt(topOffset, leftOffset));
@@ -5499,7 +5653,7 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
                 buffer = buffer.attr('data-index', i);
                 // Mark the leafIndex, so when sorting its trivial to find the correct field to sort by
                 buffer = buffer.attr('data-leaf-index', header.leafIndex);
-                if (this.get("isResizable") && !this.get('isSimpleTable')) {
+                if (this.get('isResizable') && this.get('renderColumnHeader')) {
                     buffer = buffer.push('<div class="resize-handle">&nbsp;</div>');
                 }
 
@@ -5511,7 +5665,7 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
                 label += '</div>';
             } else if (type === 'row') {
                 buffer = buffer.attr('data-index', depth % this.getPath('content.rowLeafs').length);
-                if (!this.get('isSimpleTable')) {
+                if (this.get('renderColumnHeader')) {
                     if (this.get("isResizable")) {
                         if (header.hasOwnProperty('children')) {
                             buffer = buffer.push('<div class="resize-handle" style="height: %@px"></div>'.fmt(header.children.length * 21));
@@ -6119,3 +6273,4 @@ Flame.Validator.number = Flame.Validator.create({
         return (value === '') || !(isNaN(value) || isNaN(parseFloat(value)));
     }
 });
+Flame.VERSION = '0.2.1';
