@@ -3,7 +3,7 @@ var App = Ember.Application.create();
 App.RootView = Flame.RootView.extend({
     childViews: 'splitView'.w(),
 
-    splitView: Flame.HorizontalSplitView.extend({
+    splitView: Flame.VerticalSplitView.extend({
         leftWidth: 250,
         minLeftWidth: 200,
 
@@ -38,4 +38,3 @@ App.RootView = Flame.RootView.extend({
         })
     })
 });
-
