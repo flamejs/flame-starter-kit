@@ -1,14 +1,14 @@
 var App = Ember.Application.create();
 
-App.RootView = Flame.RootView.extend({
-    childViews: 'splitView'.w(),
+App.RootView = Flame.View.extend({
+    childViews: ['splitView'],
 
     splitView: Flame.VerticalSplitView.extend({
         leftWidth: 250,
         minLeftWidth: 200,
 
         leftView: Flame.View.extend({
-            childViews: 'titleView buttonView'.w(),
+            childViews: ['titleView', 'buttonView'],
 
             titleView: Flame.LabelView.extend({
                 layout: { left: 5, right: 5, top: 10 },
@@ -29,7 +29,7 @@ App.RootView = Flame.RootView.extend({
         }),
 
         rightView: Flame.View.extend({
-            childViews: 'labelView'.w(),
+            childViews: ['labelView'],
 
             labelView: Flame.LabelView.extend({
                 layout: { left: 50, top: 20 },

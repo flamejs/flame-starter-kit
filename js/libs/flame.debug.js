@@ -1,3 +1,5 @@
+(function() {
+'use strict';
 
 
 
@@ -7,323 +9,110 @@
 
 
 
+window.Flame = Ember.Namespace.create();
 
+})();
+(function() {
+'use strict';
 
-window.Flame = Ember.Namespace.create({});
-// In IE7, Range is not defined, which Metamorph handles with a fallback
-if (typeof Range !== "undefined") {
-  // In IE9, Range is defined but createContextualFragment is not, which Metamorph doesn't handle
-  // From http://stackoverflow.com/questions/5375616/extjs4-ie9-object-doesnt-support-property-or-method-createcontextualfragme
-  if (typeof Range.prototype.createContextualFragment === "undefined") {
-      Range.prototype.createContextualFragment = function(html) {
-          var doc = this.startContainer.ownerDocument;
-          var container = doc.createElement("div");
-          container.innerHTML = html;
-          var frag = doc.createDocumentFragment(), n;
-          while ( (n = container.firstChild) ) {
-              frag.appendChild(n);
-          }
-          return frag;
-      };
-  }
-}
-;
-/**
- * Copyright 2010 Tim Down.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// There's Ember.computed.empty and Ember.computed.notEmpty, but there's no
+// counterpart for Ember.computed.equal
+Ember.computed.notEqual = function(dependentKey, value) {
+    return Ember.computed(dependentKey, function() {
+        return value !== Ember.get(this, dependentKey);
+    });
+};
 
-var Hashtable=(function(){var p="function";var n=(typeof Array.prototype.splice==p)?function(s,r){s.splice(r,1)}:function(u,t){var s,v,r;if(t===u.length-1){u.length=t}else{s=u.slice(t+1);u.length=t;for(v=0,r=s.length;v<r;++v){u[t+v]=s[v]}}};function a(t){var r;if(typeof t=="string"){return t}else{if(typeof t.hashCode==p){r=t.hashCode();return(typeof r=="string")?r:a(r)}else{if(typeof t.toString==p){return t.toString()}else{try{return String(t)}catch(s){return Object.prototype.toString.call(t)}}}}}function g(r,s){return r.equals(s)}function e(r,s){return(typeof s.equals==p)?s.equals(r):(r===s)}function c(r){return function(s){if(s===null){throw new Error("null is not a valid "+r)}else{if(typeof s=="undefined"){throw new Error(r+" must not be undefined")}}}}var q=c("key"),l=c("value");function d(u,s,t,r){this[0]=u;this.entries=[];this.addEntry(s,t);if(r!==null){this.getEqualityFunction=function(){return r}}}var h=0,j=1,f=2;function o(r){return function(t){var s=this.entries.length,v,u=this.getEqualityFunction(t);while(s--){v=this.entries[s];if(u(t,v[0])){switch(r){case h:return true;case j:return v;case f:return[s,v[1]]}}}return false}}function k(r){return function(u){var v=u.length;for(var t=0,s=this.entries.length;t<s;++t){u[v+t]=this.entries[t][r]}}}d.prototype={getEqualityFunction:function(r){return(typeof r.equals==p)?g:e},getEntryForKey:o(j),getEntryAndIndexForKey:o(f),removeEntryForKey:function(s){var r=this.getEntryAndIndexForKey(s);if(r){n(this.entries,r[0]);return r[1]}return null},addEntry:function(r,s){this.entries[this.entries.length]=[r,s]},keys:k(0),values:k(1),getEntries:function(s){var u=s.length;for(var t=0,r=this.entries.length;t<r;++t){s[u+t]=this.entries[t].slice(0)}},containsKey:o(h),containsValue:function(s){var r=this.entries.length;while(r--){if(s===this.entries[r][1]){return true}}return false}};function m(s,t){var r=s.length,u;while(r--){u=s[r];if(t===u[0]){return r}}return null}function i(r,s){var t=r[s];return(t&&(t instanceof d))?t:null}function b(t,r){var w=this;var v=[];var u={};var x=(typeof t==p)?t:a;var s=(typeof r==p)?r:null;this.put=function(B,C){q(B);l(C);var D=x(B),E,A,z=null;E=i(u,D);if(E){A=E.getEntryForKey(B);if(A){z=A[1];A[1]=C}else{E.addEntry(B,C)}}else{E=new d(D,B,C,s);v[v.length]=E;u[D]=E}return z};this.get=function(A){q(A);var B=x(A);var C=i(u,B);if(C){var z=C.getEntryForKey(A);if(z){return z[1]}}return null};this.containsKey=function(A){q(A);var z=x(A);var B=i(u,z);return B?B.containsKey(A):false};this.containsValue=function(A){l(A);var z=v.length;while(z--){if(v[z].containsValue(A)){return true}}return false};this.clear=function(){v.length=0;u={}};this.isEmpty=function(){return !v.length};var y=function(z){return function(){var A=[],B=v.length;while(B--){v[B][z](A)}return A}};this.keys=y("keys");this.values=y("values");this.entries=y("getEntries");this.remove=function(B){q(B);var C=x(B),z,A=null;var D=i(u,C);if(D){A=D.removeEntryForKey(B);if(A!==null){if(!D.entries.length){z=m(v,C);n(v,z);delete u[C]}}}return A};this.size=function(){var A=0,z=v.length;while(z--){A+=v[z].entries.length}return A};this.each=function(C){var z=w.entries(),A=z.length,B;while(A--){B=z[A];C(B[0],B[1])}};this.putAll=function(H,C){var B=H.entries();var E,F,D,z,A=B.length;var G=(typeof C==p);while(A--){E=B[A];F=E[0];D=E[1];if(G&&(z=w.get(F))){D=C(F,z,D)}w.put(F,D)}};this.clone=function(){var z=new b(t,r);z.putAll(w);return z}}return b})();
-Ember.mixin(Array.prototype, {
-    sum: function() {
-        return this.reduce(function(sum, x) { return sum+x; }, 0);
-    },
-
-    isEqual: function(ary) {
-        if (!ary) return false ;
-        if (ary == this) return true;
-
-        var loc = ary.get('length') ;
-        if (loc != this.get('length')) return false ;
-
-        while(--loc >= 0) {
-            if (!Ember.isEqual(ary.objectAt(loc), this.objectAt(loc))) return false ;
-        }
-        return true ;
-    },
-
-    max: function() {
-        return Math.max.apply(Math, this);
-    },
-
-    min: function() {
-        return Math.min.apply(Math, this);
-    },
-
-    flatten: function() {
-        return this.reduce(function(a, b) { return a.concat(b); }, []);
-    }
-});
-// Cannot do reopen on Ember.Binding
-Ember.mixin(Ember.Binding.prototype, {
-    eq: function(testValue) {
-        return this.transform(function(value, binding) {
-            return ((Ember.typeOf(value) === 'string') && (value === testValue));
-        });
-    },
-
-    // If value evaluates to true, return trueValue, otherwise falseValue
-    transformTrueFalse: function(trueValue, falseValue) {
-        return this.transform({
-            to: function(value) {
-                return value ? trueValue : falseValue;
-            },
-            from: function(value) {
-                return value === trueValue;
-            }
-        });
-    },
-
-    //only return binding if target
-    kindOf: function(klasses) {
-        return this.transform(function(value, binding) {
-            var object = (Ember.isArray(value) ? value.toArray()[0] : value);
-            var klassArray = Ember.isArray(klasses) ? klasses : [klasses];
-            var isKindOf = klassArray.some(function(k) {
-                return object && object instanceof k;
-            });
-            if (isKindOf) {
-                return object;
-            } else {
-                return null;
-            }
-        });
-    },
-
-    //returns true if obj equals binding value
-    equals: function(obj) {
-        return this.transform(function(value, binding) {
-            return obj === value;
-        });
-    },
-
-    isNull: function() {
-        return this.transform(function(value, binding) {
-            return value === null;
-        });
-    },
-
-    hasPermission: function(key) {
-        return this.transform(function(value, binding) {
-            return (value && value.hasPermission && value.hasPermission(key));
-        });
-    }
-});
 Flame.computed = {
-    equals: function(dependentKey, value) {
-        return Ember.computed(dependentKey, function() {
-            return value === Ember.getPath(this, dependentKey);
-        }).cacheable();
-    },
-
-    notEquals: function(dependentKey, value) {
-        return Ember.computed(dependentKey, function() {
-            return value !== Ember.getPath(this, dependentKey);
-        }).cacheable();
-    },
-
     trueFalse: function(dependentKey, trueValue, falseValue) {
         return Ember.computed(dependentKey, function() {
-            return Ember.getPath(this, dependentKey) ? trueValue : falseValue;
-        }).cacheable();
+            return Ember.get(this, dependentKey) ? trueValue : falseValue;
+        });
     }
 };
 
-// XXX these are already in Ember master, include them here in case an older
-// Ember version is used
-Flame.computed.not = function(dependentKey) {
-    return Ember.computed(dependentKey, function(key) {
-        return !Ember.getPath(this, dependentKey);
-    }).cacheable();
-};
+})();
+(function() {
+'use strict';
 
-Flame.computed.empty = function(dependentKey) {
-    return Ember.computed(dependentKey, function(key) {
-        var val = Ember.getPath(this, dependentKey);
-        return val === undefined || val === null || val === '' || (Ember.isArray(val) && Ember.get(val, 'length') === 0);
-    }).cacheable();
-};
+/**
+  Flame.computed.nearest can be used to created computed properties based on
+  properties up in the parentView chain.
 
-Flame.computed.bool = function(dependentKey) {
-    return Ember.computed(dependentKey, function(key) {
-        return !!Ember.getPath(this, dependentKey);
-    }).cacheable();
-};
+  Let's define this computed property:
 
-Flame.computed.or = function(dependentKey, otherKey) {
-    return Ember.computed(dependentKey, otherKey, function(key) {
-        return Ember.getPath(this, dependentKey) || Ember.getPath(this, otherKey);
-    }).cacheable();
-};
-/*
- Converts height, width, left, right,top, bottom, centerX and centerY
- to a layout hash used in Flame.View
+      bar: Flame.computed.nearest('foo.bar')
+
+  The first time we `get` or `set` this computed property, we search through
+  the parentView chain for the first view that has the `foo` property and
+  define the following computed property:
+
+      __foo_bar: Ember.computed.alias('parentView.parentView.parentView.foo.bar')
+
+  Any future use of the `get` property will just be an alias to the `__foo_bar`
+  property.
+
+  You can also pass a computed property macro as a second argument to `nearest`.
+
+      bar: Flame.computed.nearest('foo.bar', Ember.computed.empty)
+
+  This would then generate the following computed property:
+
+      __foo_bar: Ember.computed.empty('parentView.parentView.parentView.foo.bar')
 */
 
-function handleLayoutHash(hash) {
-    var layout = null;
-    if (hash.width > 0 || hash.height > 0 || hash.top > 0 || hash.bottom > 0 || hash.left > 0 || hash.right > 0 || hash.centerX !== null || hash.centerY !== null) {
-        layout = { width: hash.width, height: hash.height, bottom: hash.bottom, top: hash.top, left: hash.left, right: hash.right, centerX: hash.centerX, centerY: hash.centerY };
+Flame.computed.nearest = function(key, macro) {
+    var propertyName = '__' + key.replace(/\./g, '_');
+
+    return Ember.computed(propertyName, function(k, value) {
+        if (!Ember.meta(this).descs[propertyName]) {
+            createProperty(this, propertyName, key, macro);
+        }
+        if (arguments.length > 1) {
+            this.set(propertyName, value);
+        }
+        return this.get(propertyName);
+    });
+};
+
+var IS_PATH_REGEX = /[\.]/,
+    PATH_SPLIT_REGEX = /([^\.]+)(\..*)/;
+
+function createProperty(target, propertyName, property, macro) {
+    var rest = '';
+
+    if (IS_PATH_REGEX.test(property)) {
+        var match = property.match(PATH_SPLIT_REGEX);
+        property = match[1];
+        rest = match[2];
     }
-    return layout;
+
+    var view = target.get('parentView');
+    var path = 'parentView';
+
+    while (view) {
+        if (property in view) break;
+        view = view.get('parentView');
+        path += '.parentView';
+    }
+
+    Ember.assert("Could not find property '%@' in ancestor views".fmt(property), view);
+    Ember.assert("Don't use Flame.computed.nearest to fetch a property from the parent view", path !== 'parentView');
+
+    path += '.' + property + rest;
+
+    if (typeof macro === 'undefined') macro = Ember.computed.alias;
+
+    Ember.defineProperty(target, propertyName, macro(path));
 }
+;
 
-/*
- Usage:
-   {{flameView Flame.ButtonView top=10 bottom=20 title="Save"}}
-*/
-Ember.Handlebars.registerHelper('flameView', function(path, options) {
-    Ember.assert("The view helper only takes a single argument", arguments.length <= 2);
-    // If no path is provided, treat path param as options.
-    if (path && path.data && path.data.isRenderData) {
-        options = path;
-        path = "Flame.View";
-    }
-    var hash = options.hash;
-
-    hash.layout = handleLayoutHash(hash);
-
-    Ember.Handlebars.ViewHelper.helper(this, path, options);
-});
-
-/*
-  Usage:
-   {{#tabView height="300" width="300"}}
-      {{#tab title="One" value="one"}}
-        Content tab One
-      {{/tab}}
-      {{#tab title="Two" value="two"}}
-        Content tab Two
-      {{/tab}}
-    {{/tabView}}
-*/
-Ember.Handlebars.registerHelper("tabView", function(path) {
-    var options = path;
-    var hash = options.hash;
-
-    hash.layout = handleLayoutHash(hash);
-
-    var tab_view = Flame.TabView.create(hash);
-
-    var template = path.fn;
-
-    if (template) {
-        var context = tab_view.get('templateContext'),
-            data = { buffer: [], view: tab_view };
-
-        template(context, { data: data });
-    }
-
-    path.data.view.appendChild(tab_view);
-});
-
-Ember.Handlebars.registerHelper('tab', function(path) {
-    var tabView = path.data.view;
-    var hash = path.hash;
-    var tab = hash;
-    var options = path;
-
-    tabView.set(hash.value, Flame.View.extend({
-        template: options.fn
-    }));
-
-
-    if (tabView.get('tabs') === null) {
-        tabView.set('tabs', Ember.A([]));
-    }
-
-    tabView.get('tabs').pushObject (hash);
-});
-
-/*
-  Usage:
-   {{#panelView height="200" width="300" title="Nice" allowMoving="true" centerX=0 centerY=-50 isModal=true allowClosingByClickingOutside=true}}
-        content
-   {{/panelView}}
-*/
-Ember.Handlebars.registerHelper("panelView", function(path){
-    var options = path;
-    var hash = options.hash;
-
-    hash.layout = handleLayoutHash(hash);
-
-    var template = path.fn;
-    if (template) {
-        hash.contentView = Flame.View.create({layout: { top: 26, bottom: 0, left: 0, right: 0}, "template" : template});
-    }
-
-    var view = Flame.Panel.create(hash);
-
-    view.appendTo('body');
-});
-
-/*
-  Usage:
-    {{#table height="200" width="300" headerProperty="firstName" contentBinding="App.tableArray.content" controller="Flame.ArrayTableController"}}
-      {{column label="First Name" property="firstName"}}
-      {{column label="Second" property="lastName"}}
-    {{/table}}
-*/
-Ember.Handlebars.registerHelper("tableView", function(path){
-    var options = path;
-    var hash = options.hash;
-
-    hash.layout = handleLayoutHash(hash);
-
-    var template = path.fn;
-
-    if (template) {
-        var data = { buffer: [], columns: Ember.A() };
-
-        template(null, { data: data });
-        hash.columns = data.columns;
-    }
-
-    hash.content = Ember.getPath(hash.controller).create({
-        headerProperty: hash.headerProperty,
-        columns: hash.columns,
-        contentBinding: hash.contentBinding
-    });
-
-    var view = Flame.TableView.create({
-        content: hash.content,
-        layout: hash.layout
-    });
-
-    path.data.view.appendChild(view);
-});
-
-Ember.Handlebars.registerHelper('column', function(path) {
-    var columns = path.data.columns;
-    var hash = path.hash;
-    var options = path;
-
-    columns.pushObject(hash);
-});
+})();
+(function() {
+'use strict';
 
 // IE < 10 doesn't support -ms-user-select CSS property, so we need to use onselectstart event to stop the selection
-if (Ember.$.browser.msie && Ember.$.browser.version < 10) {
+if (/msie 9/i.test(window.navigator.userAgent)) {
     Ember.$(function() {
         Ember.$('body').on('selectstart', function(e) {
             var target = Ember.$(e.target);
@@ -334,18 +123,31 @@ if (Ember.$.browser.msie && Ember.$.browser.version < 10) {
     });
 }
 ;
+
+})();
+(function() {
+'use strict';
+
 Flame.imagePath = 'images/';
+
+})();
+(function() {
+'use strict';
 
 
 Ember.mixin(Flame, {
     image: function(imageUrl) {
-      if (typeof FlameImageUrlPrefix === 'undefined') {
-          return (Flame.imagePath || '') + imageUrl;
-      } else {
-          return FlameImageUrlPrefix + imageUrl;
-      }
+        if (typeof FlameImageUrlPrefix === 'undefined') {
+            return (Flame.imagePath || '') + imageUrl;
+        } else {
+            return FlameImageUrlPrefix + imageUrl;
+        }
     }
 });
+
+})();
+(function() {
+'use strict';
 
 jQuery.fn.selectRange = function(start, end) {
     return this.each(function() {
@@ -362,14 +164,6 @@ jQuery.fn.selectRange = function(start, end) {
     });
 };
 
-jQuery.fn.replaceClasses = function(newClasses) {
-    this.removeAttr('class');
-    if (newClasses) {
-        this.attr('class', newClasses);
-    }
-    return this;
-};
-
 /** Clone an element, removing metamorph binding tags and ember metadata */
 jQuery.fn.safeClone = function() {
     var clone = jQuery(this).clone();
@@ -383,8 +177,8 @@ jQuery.fn.safeClone = function() {
         var length = $this[0].attributes.length;
         for (i = 0; i < length; i++) {
             attribute = $this[0].attributes[i];
-            if (attribute && attribute.name.match(/^data-(bindattr|ember)/)) {
-                $this.removeAttr(attr.name);
+            if (attribute && /^data-(bindattr|ember)/.test(attribute.name)) {
+                $this.removeAttr(attribute.name);
             }
         }
     });
@@ -394,7 +188,12 @@ jQuery.fn.safeClone = function() {
 
     return clone;
 };
-/*
+
+})();
+(function() {
+'use strict';
+
+/**
   This stuff solves two recurring problems with bindings:
     1) you often need several bindings to the same controller,
     2) you may want to use bindings to 'configure' views nested deep in the hierarchy.
@@ -448,47 +247,60 @@ jQuery.fn.safeClone = function() {
 */
 
 
-
+var IS_PREFIXED_BINDING = /^[\^\$]/;
 Ember.mixin(Ember.Binding.prototype, {
     connect: function(obj) {
-        var m = this._from.match(/^(\^|\$)/);
-        if (!m) {  // If not a prefixed binding, connect normally
-            return this._super(obj);
-        }
+        if (!IS_PREFIXED_BINDING.test(this._from)) return this._super(obj);
     }
 });
 
+var IS_BINDING = /Binding$/;
+var PREFIXED_BINDING = /^(\^|\$)([^.]+)(.*)$/;
 Flame.reopen({
     // Bind our custom prefixed bindings. This method has to be explicitly called after creating a new child view.
     _bindPrefixedBindings: function(view) {
+        var foundPrefixedBindings = false;
         for (var key in view) {
-            if (key.match(/Binding$/)) {
-                var binding = view[key];
-                if (!(binding instanceof Ember.Binding)) {
-                    throw 'Expected a Ember.Binding!';
-                }
-
-                var m = binding._from.match(/^(\^|\$)([^.]+)(.*)$/);
-                if (m) {
-                    var useValue = m[1] === '$';
-                    var property = m[2];
-                    var suffix = m[3];
-                    var prefix;
-
-                    if (useValue) {
-                        prefix = this._lookupValueOfProperty(view, property);
-                    } else {
-                        prefix = this._lookupPathToProperty(view, property);
-                    }
-                    Ember.assert("Property '%@' was not found!".fmt(property), !Ember.none(prefix));
-
-                    var finalPath = prefix + suffix;
-                    var newBinding = new Ember.Binding(binding._to, finalPath);
-                    newBinding._transforms = binding._transforms;  // Steal possible transforms
-                    newBinding.connect(view);
-                }
+            if (this._bindPrefixed(key, view)) {
+                foundPrefixedBindings = true;
             }
         }
+        return foundPrefixedBindings;
+    },
+
+    _bindPrefixed: function(key, view) {
+        var foundPrefixedBindings = false;
+        if (IS_BINDING.test(key)) {
+            var binding = view[key];
+            Ember.assert('Expected an Ember.Binding!', binding instanceof Ember.Binding);
+
+            var m = binding._from.match(PREFIXED_BINDING);
+            if (m) {
+                foundPrefixedBindings = true;
+                var useValue = m[1] === '$';
+                var property = m[2];
+                var suffix = m[3];
+                var prefix;
+
+                if (useValue) {
+                    prefix = this._lookupValueOfProperty(view, property);
+                } else {
+                    prefix = this._lookupPathToProperty(view, property);
+                }
+                Ember.assert("Property '%@' was not found!".fmt(property), !Ember.isNone(prefix));
+                // Ember.assert("Don't use prefixed bindings to bind to a value in the parent view", prefix !== 'parentView.' + property);
+
+                var finalPath = prefix + suffix;
+                // Copy transformations and the ilk.
+                var newBinding = binding.copy();
+                newBinding._from = finalPath;
+                newBinding.connect(view);
+                // Make debugging easier
+                binding._resolved_form = newBinding._resolved_form = newBinding._from;
+                binding._unresolved_form = newBinding._unresolved_form = binding._from;
+            }
+        }
+        return foundPrefixedBindings;
     },
 
     _lookupValueOfProperty: function(view, propertyName) {
@@ -508,8 +320,8 @@ Flame.reopen({
         // Sometimes there's a binding but it hasn't 'kicked in' yet, so also check explicitly for a binding
         var bindingPropertyName = propertyName + 'Binding';
 
-        while (!Ember.none(cur)) {
-            // It seems that earlier (at least 0.9.4) the constructor of the view contained pleothra of properties,
+        while (!Ember.isNone(cur)) {
+            // It seems that earlier (at least 0.9.4) the constructor of the view contained plethora of properties,
             // but nowadays (at least 0.9.6) the properties are there throughout the prototype-chain and not in the
             // last prototype. Thus testing whether current objects prototype has the property does not give correct
             // results.
@@ -525,33 +337,41 @@ Flame.reopen({
         return undefined;
     }
 });
+
+})();
 (function() {
-    var lastTime = 0;
-    var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-        window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
-        window.cancelRequestAnimationFrame = window[vendors[x] +
-          'CancelRequestAnimationFrame'];
-    }
+'use strict';
 
-    if (!window.requestAnimationFrame) {
-        window.requestAnimationFrame = function(callback, element) {
-            var currTime = new Date().getTime();
-            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            var id = window.setTimeout(function() { callback(currTime + timeToCall); }, timeToCall);
-            lastTime = currTime + timeToCall;
-            return id;
-        };
-    }
+var lastTime = 0;
+var vendors = ['ms', 'moz', 'webkit', 'o'];
+for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+    window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+    window.cancelRequestAnimationFrame = window[vendors[x] +
+      'CancelRequestAnimationFrame'];
+}
 
-    if (!window.cancelAnimationFrame) {
-        window.cancelAnimationFrame = function(id) {
-            clearTimeout(id);
-        };
-    }
-}());
+if (!window.requestAnimationFrame) {
+    window.requestAnimationFrame = function(callback, element) {
+        var currTime = new Date().getTime();
+        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+        var id = window.setTimeout(function() { callback(currTime + timeToCall); }, timeToCall);
+        lastTime = currTime + timeToCall;
+        return id;
+    };
+}
 
-/*
+if (!window.cancelAnimationFrame) {
+    window.cancelAnimationFrame = function(id) {
+        clearTimeout(id);
+    };
+}
+;
+
+})();
+(function() {
+'use strict';
+
+/**
   A proxy that views the source array as sorted by given sort key and updates the sort key if the
   order of the items in the proxied array is changed. You can use this proxy in combination with
   a list view or tree view - that way, the concern of how to persist the order of the items is
@@ -567,9 +387,11 @@ Flame.reopen({
   position, and removing an item in the source results in it being removed from the proxy array.
   Similarly, insertions and removals in the proxy are reflected in the source array.
 
-  Note that we don't keep the indexes stricly sequential, we only care about their relative order
+  Note that we don't keep the indexes strictly sequential, we only care about their relative order
   (in other words, there may be gaps after removal). This is to prevent unnecessary datastore
-  updates.
+  updates. The sortkeys are preserved, if you create a proxied array with source that has sortkeys
+  [1, 3, 5], and then swap items, the resulting source will still only use the [1, 3, 5] as sortkeys
+  instead of e.g. [1, 2, 3].
 
   (Why give the source as 'source', not 'content', as is customary? Because it seems that then would
   need to re-implement all methods needed for array proxying, whereas with this approach we can just
@@ -578,7 +400,7 @@ Flame.reopen({
   but instead proxies all method calls directly. Here we really need to have a sorted copy, because
   sorting obviously changes the item indexes, and rewriting all operations and observers on the fly
   sounds like too difficult to implement.)
- */
+*/
 
 Flame.SortingArrayProxy = Ember.ArrayProxy.extend({
     sortKey: 'position',
@@ -609,7 +431,7 @@ Flame.SortingArrayProxy = Ember.ArrayProxy.extend({
             this.set('_content', content = []);
         }
         return content;
-    }.property(),
+    }.property().volatile(),
 
     // When moving an item, use this sequence of calls:
     //  * startMoving()
@@ -629,10 +451,8 @@ Flame.SortingArrayProxy = Ember.ArrayProxy.extend({
         var content = this.get('content');
         var sortKey = this.get('sortKey');
         this._withObserversSuppressed(function() {
-            content.forEach(function(item, i) {
-                Ember.setPath(item, sortKey, i);
-            });
-        });
+            this._reAssignSortKeys(content, sortKey);
+        }, this);
     },
 
     _sourceWillChange: function() {
@@ -677,7 +497,7 @@ Flame.SortingArrayProxy = Ember.ArrayProxy.extend({
         // situations (reloading, and setting child values), so we check if the sort key really changed, so
         // we don't do unnecessary work
         item.lastPosition = item.get(sortKey);
-        var observer = function() { 
+        var observer = function() {
             this._indexChanged(item);
         };
         Ember.addObserver(item, sortKey, this, observer);
@@ -697,8 +517,8 @@ Flame.SortingArrayProxy = Ember.ArrayProxy.extend({
     },
 
     _getObserverKey: function() {
-        return '__observer_'+Ember.guidFor(this);
-    }.property().cacheable(),
+        return '__observer_' + Ember.guidFor(this);
+    }.property(),
 
     // Observes changes on the sortKey for each item in the source array. When changes, we simply
     // replace the items in our content array with a newly sorted copy. This means that from the
@@ -718,7 +538,6 @@ Flame.SortingArrayProxy = Ember.ArrayProxy.extend({
         var content = this.get('content');
         var self = this;
         this._withObserversSuppressed(function() {
-
             if (start === 0 && removeCount === content.get("length")) { // Optimize for mass changes.
                 // Assumes that source and content arrays contain the same stuff
                 content.replace(0, removeCount);
@@ -727,10 +546,10 @@ Flame.SortingArrayProxy = Ember.ArrayProxy.extend({
                 for (var i = start; i < start + removeCount; i++) {
                     var removedItem = source.objectAt(i);
                     content.removeObject(removedItem);
-                    self._removeSortIndexObserverFor(removedItem);
+                    this._removeSortIndexObserverFor(removedItem);
                 }
             }
-        });
+        }, this);
         // No need to sort here, removal doesn't affect sort order
     },
 
@@ -751,34 +570,48 @@ Flame.SortingArrayProxy = Ember.ArrayProxy.extend({
 
     _contentArrayWillChange: function(content, start, removeCount, addCount) {
         var source = this.get('source');
-        var self = this;
         this._withObserversSuppressed(function() {
             for (var i = start; i < start + removeCount; i++) {
                 var removedItem = content.objectAt(i);
                 source.removeObject(removedItem);
-                self._removeSortIndexObserverFor(removedItem);
+                this._removeSortIndexObserverFor(removedItem);
             }
-        });
+        }, this);
     },
 
     _contentArrayDidChange: function(content, start, removeCount, addCount) {
-    // var time = new Date().getTime();
         if (addCount > 0) {
             var sortKey = this.get('sortKey');
             var source = this.get('source');
-            var self = this;
             this._withObserversSuppressed(function() {
-                content.forEach(function(item, i) {
-                    Ember.setPath(item, sortKey, i);
-                });
-
+                this._reAssignSortKeys(content, sortKey);
                 for (var i = start; i < start + addCount; i++) {
                     var addedItem = content.objectAt(i);
-                    self._addSortIndexObserverAndRegisterForRemoval(addedItem);
+                    this._addSortIndexObserverAndRegisterForRemoval(addedItem);
                     source.pushObject(addedItem);
                 }
-            });
+            }, this);
         }
+    },
+
+    _reAssignSortKeys: function(content, sortKey) {
+        // Preserve the original sort keys. If there are new items without sortKeys,
+        // use the previous items key, or zero in case its the first item
+        var keys = [];
+        content.mapProperty(sortKey).forEach(function(key, index) {
+            if (key === undefined && index === 0) keys.push(0);
+            else if (key === undefined) keys.push(keys[index - 1]);
+            else keys.push(key);
+        });
+
+        keys.sort(function(key1, key2) {
+            return Ember.compare(key1, key2);
+        });
+
+        // Assign the updated ordering with old sort keys
+        content.forEach(function(item, i) {
+            Ember.set(item, sortKey, keys[i]);
+        });
     },
 
     // TODO might be useful to make the replacing more fine-grained?
@@ -795,74 +628,74 @@ Flame.SortingArrayProxy = Ember.ArrayProxy.extend({
     _sort: function(array) {
         var sortKey = this.get('sortKey');
         array.sort(function(o1, o2) {
-            return Ember.compare(Ember.getPath(o1, sortKey), Ember.getPath(o2, sortKey));
+            return Ember.compare(Ember.get(o1, sortKey), Ember.get(o2, sortKey));
         });
     },
 
-    _withObserversSuppressed: function(func) {
+    _withObserversSuppressed: function(func, thisArg) {
         if (this._suppressObservers) return;  // If already suppressed, abort
+        if (!thisArg) thisArg = this;
 
         this._suppressObservers = true;
         try {
-            func.call();
+            func.call(thisArg);
         } finally {
             this._suppressObservers = false;
         }
     }
 
 });
-if (String.prototype.trim === undefined) {
-    String.prototype.trim = function() {
-        return jQuery.trim(this);
-    };
-}
 
-Ember.mixin(String.prototype, {
-    truncate: function(maxLength) {
-        var length = Ember.none(maxLength) ? 30 : maxLength;
-        if (this.length <= length) {
-            return this.toString();
-        } else {
-            return this.substr(0, length) + '...';
-        }
-    },
+})();
+(function() {
+'use strict';
 
-    isBlank: function() {
-        return this.trim().length === 0;
-    }
-});
 Ember.mixin(Flame, {
-    _setupStringMeasurement: function(parentClasses, elementClasses) {
-        if (!parentClasses) {
-            parentClasses = '';
-        }
-        if (!elementClasses) {
-            elementClasses = '';
-        }
+    _setupStringMeasurement: function(parentClasses, elementClasses, additionalStyles) {
+        if (!parentClasses) parentClasses = '';
+        if (!elementClasses) elementClasses = '';
+        if (!additionalStyles) additionalStyles = '';
+
         var element = this._metricsCalculationElement;
         if (!element) {
-            var parentElement = document.createElement("div");
-            parentElement.style.cssText = "position:absolute;left:-10010px; top:-10px; width:10000px; visibility:hidden;";
-            element = this._metricsCalculationElement = document.createElement("div");
-            element.style.cssText = "position:absolute; left: 0px; top: 0px; bottom: auto; right: auto; width: auto; height: auto;";
+            var parentElement = document.createElement('div');
+            parentElement.style.cssText = 'position:absolute; left:-10010px; top:-10px; width:10000px; visibility:hidden;';
+            element = this._metricsCalculationElement = document.createElement('div');
             parentElement.appendChild(element);
             document.body.insertBefore(parentElement, null);
         }
+
         element.parentNode.className = parentClasses;
         element.className = elementClasses;
+        element.style.cssText = 'position:absolute; left: 0; top: 0; bottom: auto; right: auto; width: auto; height: auto;' + additionalStyles;
         return element;
     },
 
-    measureString: function(string, parentClasses, elementClasses) {
-        var element = this._setupStringMeasurement(parentClasses, elementClasses);
-        element.innerHTML = string;
+    measureString: function(stringOrArray, parentClasses, elementClasses, additionalStyles) {
+        var escape = Handlebars.Utils.escapeExpression;
+        var measuredString;
+        // We also accept an array of strings and then return the width of the longest one by joining them with <br>.
+        if (Ember.isArray(stringOrArray)) {
+            measuredString = stringOrArray.reduce(function(currentStrings, nextString) {
+                        return currentStrings + escape(nextString) + '<br>';
+                    }, '');
+        } else {
+            measuredString = escape(stringOrArray);
+        }
+        var element = this._setupStringMeasurement(parentClasses, elementClasses, additionalStyles);
+        element.innerHTML = measuredString;
         return {
             width: element.clientWidth,
             height: element.clientHeight
         };
     }
 });
-Flame.TableCell = function(opts) {
+
+})();
+(function() {
+'use strict';
+
+Flame.TableCell = function TableCell(opts) {
     this.value = null;
     for (var key in opts) {
         if (opts.hasOwnProperty(key)) {
@@ -880,7 +713,7 @@ Flame.TableCell.prototype.formattedValue = function() {
 };
 
 Flame.TableCell.prototype.editableValue = function() {
-    throw 'Not implemented';
+    throw new Error('Not implemented');
 };
 
 Flame.TableCell.prototype.validate = function(newValue) {
@@ -888,11 +721,19 @@ Flame.TableCell.prototype.validate = function(newValue) {
 };
 
 Flame.TableCell.prototype.formatValueForBackend = function(value) {
-    throw 'Not implemented';
+    throw new Error('Not implemented');
 };
 
 Flame.TableCell.prototype.isEditable = function() {
     return false;
+};
+
+Flame.TableCell.prototype.isCopyable = function() {
+    return true;
+};
+
+Flame.TableCell.prototype.isPastable = function() {
+    return true;
 };
 
 // Returns an array of CSS classes for this cell
@@ -901,42 +742,49 @@ Flame.TableCell.prototype.cssClasses = function() {
 };
 
 Flame.TableCell.prototype.cssClassesString = function() {
-    return "";
+    return this.cssClasses().join(' ');
 };
+
+})();
+(function() {
+'use strict';
+
 Flame.TableHeader = Ember.Object.extend({
     isClickable: false,
 
-    headerLabel: function() {
-        return this.get('label');
-    }.property('label').cacheable(),
+    headerLabel: Ember.computed.alias('label'),
+    isLeaf: Ember.computed.not('children'),
 
     createCell: function(data) {
-        throw 'Not implemented';
+        throw new Error('Not implemented');
     }
 });
+
+})();
+(function() {
+'use strict';
+
 Flame.TableSortSupport = {
     sortAscendingCaption: 'Sort ascending...',
     sortDescendingCaption: 'Sort descending...',
 
     sortContent: function(sortDescriptor) {
-        throw 'Not implemented!';
+        throw new Error('Not implemented!');
     },
 
     columnHeaderClicked: function(header, targetElement) {
+        if (!header.get('isLeaf')) return;
         this._showSortMenu(header, this._sortMenuOptions(header), targetElement);
     },
 
     _showSortMenu: function(header, options, anchorView) {
-        //set width based on longest item title
-        var longestTitle = options.map(function(i) { return i.title.length; }).max();
-        var menu = Flame.MenuView.create({
+        Flame.MenuView.create({
+            minWidth: anchorView.outerWidth(),
             items: options,
-            layout: { width: longestTitle * 8 },
             target: this,
             action: 'sortContent',
-            payloadBinding: 'value'
-        });
-        menu.popup(anchorView);
+            payload: Ember.computed.alias('value')
+        }).popup(anchorView);
     },
 
     _sortMenuOptions: function(header) {
@@ -946,20 +794,25 @@ Flame.TableSortSupport = {
         ];
     }
 };
+
+})();
+(function() {
+'use strict';
+
 Flame.TableViewContentAdapter = Ember.Object.extend({
     content: null,
 
     headers: function() {
-        return this.getPath('content._headers');
-    }.property('content._headers').cacheable(),
+        return this.get('content._headers');
+    }.property('content._headers'),
 
     columnLeafs: function() {
-        return this.getPath('content.columnLeafs');
-    }.property('content.columnLeafs').cacheable(),
+        return this.get('content.columnLeafs');
+    }.property('content.columnLeafs'),
 
     rowLeafs: function() {
-        return this.getPath('content.rowLeafs');
-    }.property('content.rowLeafs').cacheable(),
+        return this.get('content.rowLeafs');
+    }.property('content.rowLeafs'),
 
     columnHeaderRows: function() {
         var columnHeaderRows = [];
@@ -971,14 +824,14 @@ Flame.TableViewContentAdapter = Ember.Object.extend({
             this._processHeader(columnHeaderRows, columnHeaders[i], 'columns', 0, false, i);
         }
 
-        columnHeaderRows.maxDepth = this.get('columnLeafs').map(function (x) { return x.depth; }).max();
+        columnHeaderRows.maxDepth = Math.max.apply(Math, this.get('columnLeafs').mapProperty('depth'));
         for (i = 0; i < this.get('columnLeafs').length; i++) {
             var colLeaf = this.get('columnLeafs')[i];
             colLeaf.rowspan = columnHeaderRows.maxDepth - colLeaf.depth + 1;
         }
 
         return columnHeaderRows;
-    }.property('headers').cacheable(),
+    }.property('headers'),
 
     rowHeaderRows: function() {
         var rowHeaderRows = [[]];
@@ -990,14 +843,14 @@ Flame.TableViewContentAdapter = Ember.Object.extend({
             this._processHeader(rowHeaderRows, rowHeaders[i], 'rows', 0, i === 0, i);
         }
 
-        rowHeaderRows.maxDepth = this.get('rowLeafs').map(function (x) { return x.depth; }).max();
+        rowHeaderRows.maxDepth = Math.max.apply(Math, this.get('rowLeafs').mapProperty('depth'));
         for (i = 0; i < this.get('rowLeafs').length; i++) {
             var rowLeaf = this.get('rowLeafs')[i];
             rowLeaf.colspan = rowHeaderRows.maxDepth - rowLeaf.depth + 1;
         }
 
         return rowHeaderRows;
-    }.property('headers').cacheable(),
+    }.property('headers'),
 
     clear: function() {
         this._headers = null;
@@ -1020,7 +873,7 @@ Flame.TableViewContentAdapter = Ember.Object.extend({
             headerRows[depth].push(header);
         } else if (type === 'rows') {
             if (!isFirst) { headerRows.push([]); }
-            headerRows[headerRows.length-1].push(header);
+            headerRows[headerRows.length - 1].push(header);
         }
 
         var count = 0;
@@ -1031,7 +884,9 @@ Flame.TableViewContentAdapter = Ember.Object.extend({
                 var child = children[i];
                 count += this._processHeader(headerRows, child, type, depth + 1, i === 0, index);
             }
-        } else { count = 1; }
+        } else {
+            count = 1;
+        }
 
         if (type === 'columns') {
             header.colspan = count;
@@ -1042,12 +897,26 @@ Flame.TableViewContentAdapter = Ember.Object.extend({
         return count;
     }
 });
-/*jshint loopfunc: true */
 
+})();
+(function() {
+'use strict';
+
+function createProxyMethod(methodName) {
+    return function() {
+        var length = arguments.length;
+        var args = Array(length + 1);
+        args[0] = methodName;
+        for (var i = 1; i < length + 1; i++) {
+            args[i] = arguments[i - 1];
+        }
+        return this.invokeStateMethod.apply(this, args);
+    };
+}
 
 Flame.State = Ember.Object.extend({
-    gotoState: function(stateName) {
-        this.get('owner').gotoState(stateName);
+    gotoFlameState: function(stateName) {
+        this.get('owner').gotoFlameState(stateName);
     },
 
     // Touch events sometimes hide useful data in an originalEvent sub-hash.
@@ -1076,41 +945,38 @@ Flame.State = Ember.Object.extend({
         return event;
     },
 
-    $: function(args) {
-        args = Array.prototype.slice.call(arguments);
+    $: function() {
         var owner = this.get('owner');
-        return owner.$.apply(owner, args);
+        return owner.$.apply(owner, arguments);
     }
 });
 
 Flame.State.reopenClass({
-    gotoHandler: function(stateName, returnValue) {
+    gotoFlameState: function(stateName, returnValue) {
         return function() {
-            this.gotoState(stateName);
+            this.gotoFlameState(stateName);
             return returnValue === undefined ? true : returnValue;
         };
     }
 });
 
 Flame.Statechart = {
-    initialState: null,
-    currentState: undefined,
-    _currentStateName: undefined,
+    initialFlameState: null,
+    currentFlameState: undefined,
 
     init: function() {
         this._super();
 
         // Look for defined states and initialize them
-        var key;
-        for (key in this) {
+        for (var key in this) {
             var state = this[key];
             if (Flame.State.detect(state)) {
-                this.set(key, state.create({owner: this}));
+                this[key] = state.create({ owner: this, name: key });
                 this._setupProxyMethods(this[key]);
             }
         }
-        Ember.assert("No initial state defined for statechart!", !Ember.none(this.get('initialState')));
-        this.gotoState(this.get('initialState'));
+        Ember.assert('No initial state defined for statechart!', !Ember.isNone(this.get('initialFlameState')));
+        this.gotoFlameState(this.get('initialFlameState'));
     },
 
     /**
@@ -1120,58 +986,52 @@ Flame.Statechart = {
     */
     _setupProxyMethods: function(state) {
         for (var property in state) {
-            if (state.constructor.prototype.hasOwnProperty(property) && Ember.typeOf(state[property]) === "function" &&
-                !this[property] && property !== "enterState" && property !== "exitState") {
-                this[property] = function(methodName) {
-                    return function(args) {
-                        args = Array.prototype.slice.call(arguments);
-                        args.unshift(methodName);
-                        return this.invokeStateMethod.apply(this, args);
-                    };
-                }(property);
+            if (state.constructor.prototype.hasOwnProperty(property) && typeof state[property] === 'function' &&
+                !this[property] && property !== 'enterState' && property !== 'exitState') {
+                this[property] = createProxyMethod(property);
             }
         }
     },
 
-    gotoState: function(stateName) {
-        Ember.assert("Cannot go to an undefined or null state!", !Ember.none(stateName));
-        var currentState = this.get('currentState');
+    gotoFlameState: function(stateName) {
+        Ember.assert('Cannot go to an undefined or null state!', !Ember.isNone(stateName));
+        var currentFlameState = this.get('currentFlameState');
         var newState = this.get(stateName);
-        //do nothing if we are already in the state to go to
-        if (currentState === newState) {
+        // do nothing if we are already in the state to go to
+        if (currentFlameState === newState) {
             return;
         }
-        if (!Ember.none(newState) && newState instanceof Flame.State) {
-            if (!Ember.none(currentState)) {
-                if (currentState.exitState) currentState.exitState();
+        if (!Ember.isNone(newState) && newState instanceof Flame.State) {
+            if (!Ember.isNone(currentFlameState)) {
+                if (currentFlameState.exitState) currentFlameState.exitState();
             }
-            this._currentStateName = stateName;
-            this.set('currentState', newState);
+            this.set('currentFlameState', newState);
             if (newState.enterState) newState.enterState();
         } else {
-            throw new Error("%@ is not a state!".fmt(stateName));
+            throw new Error('%@ is not a state!'.fmt(stateName));
         }
     },
 
-    /**
-     * Is this state chart currently in a state with the given name?
-     * @param stateName
-     * @returns {Boolean} is this statechart currently in a state with the given name?
-     */
-    isCurrentlyIn: function(stateName) {
-        return this._currentStateName === stateName;
-    },
-
-    invokeStateMethod: function(methodName, args) {
-        args = Array.prototype.slice.call(arguments); args.shift();
-        var state = this.get('currentState');
-        Ember.assert("Cannot invoke state method without having a current state!", !Ember.none(state) && state instanceof Flame.State);
+    invokeStateMethod: function(methodName) {
+        for (var length = arguments.length, args = Array(length - 1), i = 1; i < length; i++) {
+            args[i - 1] = arguments[i];
+        }
+        var state = this.get('currentFlameState');
+        Ember.assert('Cannot invoke state method without having a current state!', !Ember.isNone(state) && state instanceof Flame.State);
         var method = state[methodName];
-        if (Ember.typeOf(method) === "function") {
+        if (typeof method === 'function') {
             return method.apply(state, args);
+        } else if (methodName === 'keyDown') {
+            args.unshift(methodName);
+            return !this._handleKeyEvent.apply(this, args);
         }
     }
 };
+
+})();
+(function() {
+'use strict';
+
 /**
   A controller that you need to use when displaying an Flame.TableView. You need to
   define _headers property and call pushDataBatch to render data (can be called
@@ -1186,6 +1046,9 @@ Flame.TableController = Ember.Object.extend({
     dirtyCells: [],
     valuesOn: 'column',
     isLoading: false,
+
+    tableDataBinding: '_data',
+    headerDataBinding: '_headers',
 
     /**
       Takes in an array of cell value objects, e.g.
@@ -1207,7 +1070,7 @@ Flame.TableController = Ember.Object.extend({
         if (dataBatch !== undefined) {
             var headers = this.get('_headers');
             if (!headers) {
-                throw "Can't push data without first setting headers!";
+                throw new Error("Can't push data without first setting headers!");
             }
 
             if (!this._dataBatchIsForCurrentTable(dataBatch)) return;
@@ -1249,10 +1112,10 @@ Flame.TableController = Ember.Object.extend({
     // crash the UI as it would try to access missing cells.
     // Here we'll ensure that the batch belongs actually to current table by checking if first AND last
     // item in the batch are accessible.
-    _dataBatchIsForCurrentTable : function(dataBatch) {
+    _dataBatchIsForCurrentTable: function(dataBatch) {
         var length = dataBatch.length;
         var mapping = this.get("_indexFromPathMapping");
-        return length > 0 ? mapping[dataBatch[0].path.row] && mapping[dataBatch[length-1].path.row] : false;
+        return length > 0 ? mapping[dataBatch[0].path.row] && mapping[dataBatch[length - 1].path.row] : false;
     },
 
     _indexFromPathMapping: function() {
@@ -1277,19 +1140,22 @@ Flame.TableController = Ember.Object.extend({
             }
         }
         return mapping;
-    }.property("rowLeafs", "columnLeafs").cacheable(),
+    }.property("rowLeafs", "columnLeafs"),
 
     rowLeafs: function() {
         var headers = this.get('_headers');
         if (!headers) { return null; }
         return this._getLeafs(headers.rowHeaders, []);
-    }.property('_headers').cacheable(),
+    }.property('_headers', '_headers.columns'),
+    // _headers.columns is really a nonexistent attribute, but adding it appears to trigger cache invalidation, which
+    // prevents rowLeafs and columnLeafs from returning invalid data. FIXME: When upgrading Ember.js, it should be
+    // tested if this hack is still necessary.
 
     columnLeafs: function() {
         var headers = this.get('_headers');
         if (!headers) { return null; }
         return this._getLeafs(headers.columnHeaders, []);
-    }.property('_headers').cacheable(),
+    }.property('_headers', '_headers.columns'),
 
     pathFromIndex: function(index) {
         var rowLeafs = this.get('rowLeafs');
@@ -1298,9 +1164,8 @@ Flame.TableController = Ember.Object.extend({
     },
 
     // Translate a path to an index in the 2-dimensional grid of data
-    // see path documentation in table_data.rb for more information
     indexFromPath: function(path) {
-        var mapping = this.get("_indexFromPathMapping");
+        var mapping = this.get('_indexFromPathMapping');
         return mapping[path.row][path.column];
     },
 
@@ -1329,14 +1194,14 @@ Flame.TableController = Ember.Object.extend({
     // When setting headers, resolve refs and record extra information to make rendering easier
     _headersDidChange: function() {
         var headers = this.get('_headers');
-        if (!Ember.none(headers)) {
+        if (!Ember.isNone(headers)) {
             var data = [];
             this.set('dirtyCells', []);
 
             // fill this.data with nulls, will be fetched lazily later
             var rowLength = this.get('rowLeafs').length;
             var columnLength = this.get('columnLeafs').length;
-            for (i = 0; i < rowLength; i++) {
+            for (var i = 0; i < rowLength; i++) {
                 data.push([]);
                 for (var j = 0; j < columnLength; j++) {
                     data[i].push(null);
@@ -1346,6 +1211,11 @@ Flame.TableController = Ember.Object.extend({
         }
     }.observes('_headers')
 });
+
+})();
+(function() {
+'use strict';
+
 
 
 /*
@@ -1385,7 +1255,7 @@ Flame.DataTableController = Flame.TableController.extend({
             rowHeaders: this._wrapHeaders(headers.rowHeaders || []),
             columnHeaders: this._wrapHeaders(headers.columnHeaders || [])
         };
-    }.property('headers').cacheable(),
+    }.property('headers'),
 
     _wrapHeaders: function(headers) {
         var self = this;
@@ -1407,7 +1277,7 @@ Flame.DataTableController = Flame.TableController.extend({
                 return new cellClass({value: cellData.value});
             }
         });
-    }.property().cacheable(),
+    }.property(),
 
     cellClass: Flame.TableCell,
 
@@ -1431,6 +1301,11 @@ Flame.DataTableController = Flame.TableController.extend({
     }.observes('headers')
 
 });
+
+})();
+(function() {
+'use strict';
+
 
 
 
@@ -1456,14 +1331,14 @@ Flame.ArrayTableController = Flame.DataTableController.extend(Flame.TableSortSup
             rowHeaders: this.get('content').map(function(object, i) {
                 // headers won't update in-place, have to force rerender via observer
                 var originalValue = object.get(headerProperty);
-                var observerMethod = function() {
+                var observerMethod = (function() {
                     return function(sender, key, value) {
                         // relies on ArrayTableController#headers being recreated when headers change
                         if (value !== originalValue) {
                             self.refreshHeaders();
                         }
                     };
-                }();
+                })();
                 self._setPropertyObserver(object, headerProperty, observerMethod);
                 return {
                     isClickable: rowHeadersClickable,
@@ -1472,10 +1347,10 @@ Flame.ArrayTableController = Flame.DataTableController.extend(Flame.TableSortSup
                 };
             }),
             columnHeaders: this.get('columns').map(function(column, i) {
-                return {label: Ember.getPath(column, 'label'), property: Ember.getPath(column, 'property')};
+                return { label: Ember.get(column, 'label'), property: Ember.get(column, 'property') };
             })
         };
-    }.property('content.@each', 'columns', 'headerProperty', 'rowHeadersClickable').cacheable(),
+    }.property('content.[]', 'columns', 'headerProperty', 'rowHeadersClickable'),
 
     data: function() {
         var self = this;
@@ -1483,18 +1358,19 @@ Flame.ArrayTableController = Flame.DataTableController.extend(Flame.TableSortSup
         return this.get('content').map(function(object, i) {
             return columns.map(function(column, j) {
                 // add observer for in-place cell refreshing
-                var propertyName = Ember.getPath(column, 'property');
-                var observerMethod = function() {
+                var propertyName = Ember.get(column, 'property');
+                var observerMethod = (function() {
+                    var propertyName = Ember.get(column, 'property');
                     return function(sender, key, value) {
-                        self.pushDataBatch([{path: {row: [i], column: [j]}, value: value}]);
+                        self.pushDataBatch([{path: {row: [i], column: [j]}, value: sender.get(propertyName)}]);
                     };
-                }();
+                })();
                 self._setPropertyObserver(object, propertyName, observerMethod);
 
-                return Ember.get(object, Ember.getPath(column, 'property'));
+                return Ember.get(object, Ember.get(column, 'property'));
             });
         });
-    }.property('headers').cacheable(),
+    }.property('headers'),
 
     _setPropertyObserver: function(object, propertyName, observerMethod) {
         var observerName = propertyName + "DidChangeInArrayTableController"; // extra suffix for avoiding name conflicts
@@ -1563,19 +1439,26 @@ Flame.ArrayTableController = Flame.DataTableController.extend(Flame.TableSortSup
         this.propertyWillChange('headers');
         this.propertyDidChange('headers');
     }
-
 });
-// Support for firing an action, given a target, action and an optional payload. Any of those
-// can naturally be defined with a binding. Furthermore, if target is a path the resolves to
-// a string, that string is again resolved as a path, etc. until it resolved on non-string.
-// For example, target could be 'parentView.controller', which could resolve to
-// 'MyApp.fooController', which would then resolve to a controller object. If target is not
-// defined, it defaults to the view itself.
-//
-// Action can be defined as a string or a function. If it's a function, it's called with the
-// target bound to 'this'.
-//
-// If payload is not defined, it defaults to the view itself.
+
+})();
+(function() {
+'use strict';
+
+/**
+  Support for firing an action, given a target, action and an optional payload. Any of those
+  can naturally be defined with a binding. Furthermore, if target is a path the resolves to
+  a string, that string is again resolved as a path, etc. until it resolved on non-string.
+  For example, target could be 'parentView.controller', which could resolve to
+  'MyApp.fooController', which would then resolve to a controller object. If target is not
+  defined, it defaults to the view itself.
+
+  Action can be defined as a string or a function. If it's a function, it's called with the
+  target bound to 'this'.
+
+  If payload is not defined, it defaults to the view itself.
+*/
+
 Flame.ActionSupport = {
     target: null,
     action: null,
@@ -1583,65 +1466,88 @@ Flame.ActionSupport = {
 
     fireAction: function(action, payload) {
         var target = this.get('target') || this;
+        this.beforeAction(this);
 
-        while ('string' === typeof target) {  // Use a while loop: the target can be a path gives another path
+        while (typeof target === 'string') {  // Use a while loop: the target can be a path gives another path
             if (target.charAt(0) === '.') {
-                target = this.getPath(target.slice(1));  // If starts with a dot, interpret relative to this view
+                target = this.get(target.slice(1));  // If starts with a dot, interpret relative to this view
             } else {
-                target = Ember.getPath(target);
+                target = Ember.get(target);
             }
         }
-        if (action === undefined) { action = this.get('action'); }
+        if (action === undefined) action = this.get('action');
 
         if (action) {
-            var actionFunction = 'function' === typeof action ? action : Ember.get(target, action);
-            if (!actionFunction) throw 'Target %@ does not have action %@'.fmt(target, action);
-            var actualPayload = !Ember.none(payload) ? payload : this.get('payload');
-            if (Ember.none(actualPayload)) { actualPayload = this; }
-            return actionFunction.call(target, actualPayload, action, this);
+            var actionFunction = typeof action === 'function' ? action : Ember.get(target, action);
+            if (!actionFunction) throw new Error('Target %@ does not have action %@'.fmt(target, action));
+            var self = this;
+            var actualPayload = !Ember.isNone(payload) ? payload : this.get('payload');
+            if (Ember.isNone(actualPayload)) actualPayload = self;
+            var afterActionCallback = function() {
+                self.afterAction(self);
+            };
+            return actionFunction.call(target, actualPayload, action, this, afterActionCallback);
         }
 
         return false;
-    }
-};
-(function() {
-    var eventHandlers = {
-        interpretKeyEvents: function(event) {
-            var mapping = event.shiftKey ? Flame.MODIFIED_KEY_BINDINGS : Flame.KEY_BINDINGS;
-            var eventName = mapping[event.keyCode];
-            if (eventName && this[eventName]) {
-                var handler = this[eventName];
-                if (Ember.typeOf(handler) === 'function') {
-                    return handler.call(this, event, this);
-                }
-            }
-            return false;
-        },
+    },
 
-        handleKeyEvent: function(event, view) {
-            var emberEvent = null;
-            switch (event.type) {
-                case "keydown": emberEvent = 'keyDown'; break;
-                case "keypress": emberEvent = 'keyPress'; break;
-            }
-            var handler = emberEvent ? this.get(emberEvent) : null;
-            if (window.FlameInspector && emberEvent) FlameInspector.logEvent(event, emberEvent, this);
-            if (handler) {
-                // Note that in jQuery, the contract is that event handler should return
-                // true to allow default handling, false to prevent it. But in Ember, event handlers return true if they handled the event,
-                // false if they didn't, so we want to invert that return value here.
-                return !handler.call(Flame.keyResponderStack.current(), event, Flame.keyResponderStack.current());
-            } else if (emberEvent === "keyDown" && this.interpretKeyEvents(event)) { // Try to hand down the event to a more specific key event handler
-                return false;
-            } else if (this.get('parentView')) {
-                return this.get('parentView').handleKeyEvent(event, view);
+    beforeAction: function(view) {},
+    afterAction: function(view) {}
+};
+
+})();
+(function() {
+'use strict';
+
+var eventHandlers = {
+    interpretKeyEvents: function(event) {
+        var mapping = event.shiftKey ? Flame.MODIFIED_KEY_BINDINGS : Flame.KEY_BINDINGS;
+        var eventName = mapping[event.keyCode];
+        if (eventName && this[eventName]) {
+            var handler = this[eventName];
+            if (Ember.typeOf(handler) === 'function') {
+                return handler.call(this, event, this);
             }
         }
-    };
+        return false;
+    },
 
-    Ember.View.reopen(eventHandlers);
-    Ember.TextSupport.reopen(eventHandlers);
-}());
+    handleKeyEvent: function(event, view) {
+        var emberEvent = null;
+        switch (event.type) {
+            case 'keydown':
+                emberEvent = 'keyDown';
+                break;
+            case 'keypress':
+                emberEvent = 'keyPress';
+                break;
+        }
+        var handler = emberEvent ? this.get(emberEvent) : null;
+        if (handler) {
+            // Note that in jQuery, the contract is that event handler should return
+            // true to allow default handling, false to prevent it. But in Ember, event handlers return true if they handled the event,
+            // false if they didn't, so we want to invert that return value here.
+            return !handler.call(Flame.keyResponderStack.current(), event, Flame.keyResponderStack.current());
+        }
+        return this._handleKeyEvent(emberEvent, event, view);
+    },
+
+    _handleKeyEvent: function(eventName, event, view) {
+        if (eventName === 'keyDown') { // Try to hand down the event to a more specific key event handler
+            var result = this.interpretKeyEvents(event);
+            if (result === Flame.ALLOW_BROWSER_DEFAULT_HANDLING) return true;
+            if (result) return false;
+        }
+        if (this.get('parentView')) {
+            return this.get('parentView').handleKeyEvent(event, view);
+        }
+        return true;
+    }
+};
+
+Ember.View.reopen(eventHandlers);
+Ember.TextSupport.reopen(eventHandlers);
 
 Flame.KEY_BINDINGS = {
     8: 'deleteBackward',
@@ -1683,13 +1589,13 @@ Ember.mixin(Flame, {
       that the previously focused view will re-gain the focus as soon as the modal element is closed. So if the
       previously focused view was e.g. in the middle of some edit operation, it shouldn't cancel that operation.
     */
-    keyResponderStack: Ember.Object.create({
+    keyResponderStack: Ember.Object.createWithMixins({
         _stack: [],
 
         // Observer-friendly version of getting current
         currentKeyResponder: function() {
             return this.current();
-        }.property(),
+        }.property().volatile(),
 
         current: function() {
             var length = this._stack.get('length');
@@ -1698,9 +1604,8 @@ Ember.mixin(Flame, {
         },
 
         push: function(view) {
-            if (!Ember.none(view)) {
+            if (!Ember.isNone(view)) {
                 if (view.willBecomeKeyResponder) view.willBecomeKeyResponder();
-                //console.log('View %s became key responder', Ember.guidFor(view));
                 if (view.set && !view.isDestroyed) view.set('isFocused', true);
                 this._stack.push(view);
                 if (view.didBecomeKeyResponder) view.didBecomeKeyResponder();
@@ -1714,7 +1619,6 @@ Ember.mixin(Flame, {
                 var current = this.current();
                 if (current && current.willLoseKeyResponder) current.willLoseKeyResponder();  // Call before popping, could make a difference
                 var view = this._stack.pop();
-                //console.log('View %s will lose key responder', Ember.guidFor(view));
                 if (view.set && !view.isDestroyed) view.set('isFocused', false);
                 if (view.didLoseKeyResponder) view.didLoseKeyResponder();
                 this.propertyDidChange('currentKeyResponder');
@@ -1740,6 +1644,19 @@ Ember.$(document).on('keydown.flame keypress.flame', null, function(event, trigg
     return true;
 });
 
+// Handle mouseUp outside of the window
+Ember.$(window).on('mouseup', function(event) {
+    var mouseResponderView = Flame.get('mouseResponderView');
+    if (mouseResponderView !== undefined) {
+        // Something (e.g. AJAX callback) may remove the responderView from DOM between mouseDown
+        // and mouseUp. In that case return true to ignore the event.
+        if (mouseResponderView.get('_state') !== 'inDOM') return true;
+
+        Flame.set('mouseResponderView', undefined);
+        return !mouseResponderView.get('eventManager')._dispatch('mouseUp', event, mouseResponderView);
+    }
+});
+
 // This logic is needed so that the view that handled mouseDown will receive mouseMoves and the eventual mouseUp, even if the
 // pointer no longer is on top of that view. Without this, you get inconsistencies with buttons and all controls that handle
 // mouse click events. The ember event dispatcher always first looks up 'eventManager' property on the view that's
@@ -1748,7 +1665,7 @@ Flame.EventManager = {
     // Set to true in your view if you want to accept key responder status (which is needed for handling key events)
     acceptsKeyResponder: false,
 
-    /*
+    /**
       Sets this view as the target of key events. Call this if you need to make this happen programmatically.
       This gets also called on mouseDown if the view handles that, returns true and doesn't have property 'acceptsKeyResponder'
       set to false. If mouseDown returned true but 'acceptsKeyResponder' is false, this call is propagated to the parent view.
@@ -1769,7 +1686,7 @@ Flame.EventManager = {
         }
     },
 
-    /*
+    /**
       Resign key responder status by popping the head off the stack. The head might or might not be this view,
       depending on whether user clicked anything since this view became the key responder. The new key responder
       will be the next view in the stack, if any.
@@ -1790,18 +1707,35 @@ Flame.EventManager = {
         },
 
         mouseUp: function(event, view) {
-            if (Flame.get('mouseResponderView') !== undefined) {
-                view = Flame.get('mouseResponderView');
+            var mouseResponderView = Flame.get('mouseResponderView');
+            if (mouseResponderView !== undefined) {
+                // Something (e.g. AJAX callback) may remove the responderView from DOM between mouseDown
+                // and mouseUp. In that case return true to ignore the event.
+                if (mouseResponderView.get('_state') !== 'inDOM') return true;
+
+                view = mouseResponderView;
                 Flame.set('mouseResponderView', undefined);
             }
             return !this._dispatch('mouseUp', event, view);
         },
 
         mouseMove: function(event, view) {
+            var mouseResponderView = Flame.get('mouseResponderView');
+            if (mouseResponderView !== undefined) {
+                // Something (e.g. AJAX callback) may remove the responderView from DOM between mouseDown
+                // and/or mouseMove. In that case return true to ignore the event.
+                if (mouseResponderView.get('_state') !== 'inDOM') return true;
+
+                view = mouseResponderView;
+            }
+            return !this._dispatch('mouseMove', event, view);
+        },
+
+        doubleClick: function(event, view) {
             if (Flame.get('mouseResponderView') !== undefined) {
                 view = Flame.get('mouseResponderView');
             }
-            return !this._dispatch('mouseMove', event, view);
+            return !this._dispatch('doubleClick', event, view);
         },
 
         keyDown: function(event) {
@@ -1822,7 +1756,6 @@ Flame.EventManager = {
         // returns true, returns the view. If the method returns false, recurses on the parent view. If no
         // view handles the event, returns false.
         _dispatch: function(eventName, event, view) {
-            if (window.FlameInspector) FlameInspector.logEvent(event, eventName, view);
             var handler = view.get(eventName);
             if (handler) {
                 var result = handler.call(view, event, view);
@@ -1835,15 +1768,22 @@ Flame.EventManager = {
         }
     }
 };
+
+})();
+(function() {
+'use strict';
+
 Flame.FocusSupport = {
     // To make text fields/areas behave consistently with our concept of key responder, we have to also
     // tell the browser to focus/blur the input field
     didBecomeKeyResponder: function() {
-        this.$().focus();
+        var $element = this.$();
+        if ($element) $element.focus();
     },
 
     didLoseKeyResponder: function() {
-        this.$().blur();
+        var $element = this.$();
+        if ($element) $element.blur();
     },
 
     focusIn: function() {
@@ -1854,116 +1794,51 @@ Flame.FocusSupport = {
 
     focusOut: function() {
         if (Flame.keyResponderStack.current() === this) {
-            this.resignKeyResponder();
+            // If focus was lost from the document, keep the "local" focus intact
+            if (document.hasFocus()) this.resignKeyResponder();
         }
     }
 };
 
+})();
+(function() {
+'use strict';
 
-// Mix this into any view. Calling enterFullscreen then makes the view shown fullscreen. An 'exit fullscreen' button is
-// shown automatically on the right upper corner on top of everything.
-//
-// TODO Make this work on IE7. The problem is that the modal pane covers everything, only the close button appears on top.
-Flame.FullscreenSupport = {
-    isFullscreen: false,
+/**
+  Support for defining the layout with a hash, e.g. layout: { left: 10, top: 10, width: 100, height: 30 }
+*/
 
-    _oldAttributes: undefined,
-    _pane: undefined,
-    _button: undefined,
-
-    modalPane: function() {
-        return Flame.View.create({
-            layout: { left: 0, top: 0, right: 0, bottom: 0 },
-            classNames: ['flame-fullscreen-pane'],
-            owner: undefined
-        });
-    }.property(),
-
-    closeButton: function() {
-        return Flame.ButtonView.create({
-            layout: { right: 3, top: 3, width: 24, height: 24 },
-            classNames: ['flame-fullscreen-close'],
-            // XXX image support in ButtonView?
-            handlebars: "<img style='margin: 3px;' src='%@'>".fmt(Flame.image('fullscreen_off.png')),
-            action: function() {
-                this.getPath('owner').exitFullscreen();
-            }
-        });
-    }.property(),
-
-    // A statechart would perhaps make sense here, but as FullscreenSupport is meant to be mixed in to any view
-    // you want full-screenable, that view might already be using a statechart for other purposes?
-    enterFullscreen: function() {
-        if (!this.get('isFullscreen')) {
-            // The close button cannot be a child of the pane, because then it's not shown in front of the fullscreen stuff.
-            // This is apparently because the pane establishes a stacking context, see http://www.w3.org/TR/CSS21/visuren.html#propdef-z-index
-            var pane, closeButton;
-            this.set('_pane', pane = this.get('modalPane'));
-            this.set('_button', closeButton = this.get('closeButton'));
-            pane.set('owner', this);
-            closeButton.set('owner', this);
-            pane.append();
-            closeButton.append();
-
-            var element = this.$();
-            var oldAttributes = {
-                left: element.css('left'), 
-                top: element.css('top'),
-                right: element.css('right'),
-                bottom: element.css('bottom'),
-                width: element.css('width'),
-                height: element.css('height'),
-                position: element.css('position'),
-                zIndex: element.css('zIndex')
-            };
-
-            // If both left & right or top & bottom is defined, discard width/height to keep the layout fluid when exiting fullscreen
-            if (oldAttributes.left !== 'auto' && oldAttributes.right !== 'auto') oldAttributes.width = undefined;
-            if (oldAttributes.top !== 'auto' && oldAttributes.bottom !== 'auto') oldAttributes.height = undefined;
-            this.set('_oldAttributes', oldAttributes);
-
-            element.css({ left: 0, top: 0, right: 0, bottom: 0, width: '', height: '', position: 'fixed', zIndex: '50' });
-
-            this.set('isFullscreen', true);
-        }
-    },
-
-    exitFullscreen: function() {
-        if (this.get('isFullscreen')) {
-            this.$().css(this.get('_oldAttributes'));
-            this.get('_pane').remove();
-            this.get('_button').remove();
-
-            this.set('isFullscreen', false);
-        }
-    }
-};
-// Support for defining the layout with a hash, e.g. layout: {left: 10, top: 10, width: 100, height: 30}
 Flame.LayoutSupport = {
     useAbsolutePosition: true,
-    concatenatedProperties: ['displayProperties'],
-    layout: {left: 0, right: 0, top: 0, bottom: 0},
+    layout: { left: 0, right: 0, top: 0, bottom: 0 },
     defaultWidth: undefined,
     defaultHeight: undefined,
     layoutManager: undefined,
-    rootView: false,
 
-    _layoutProperties: ['left', 'right', 'top', 'bottom', 'width', 'height'],
-    _cssProperties: ['left', 'right', 'top', 'bottom', 'width', 'height', 'margin-left', 'margin-top'],
+    _layoutProperties: ['left', 'right', 'top', 'bottom', 'width', 'height', 'maxHeight'],
+    _cssProperties: ['left', 'right', 'top', 'bottom', 'width', 'height', 'margin-left', 'margin-top', 'overflow'],
     _layoutChangeInProgress: false,
     _layoutSupportInitialized: false,
+    _layoutObservers: null,
 
     init: function() {
+        if (this.useAbsolutePosition) {
+            this.classNames = this.get('classNames').concat(['flame-view']);
+        }
         this._super();
         this._initLayoutSupport();
         this.consultLayoutManager();
         this.updateLayout();  // Make sure CSS is up-to-date, otherwise can sometimes get out of sync for some reason
     },
 
-    createChildView: function(view, attrs) {
-        view = this._super(view, attrs);
-        Flame._bindPrefixedBindings(view);
-        return view;
+    willDestroy: function() {
+        this._super();
+        if (this._layoutObservers) {
+            var length = this._layoutObservers.length;
+            for (var i = 0; i < length; i++) {
+                this.removeObserver(this._layoutObservers[i]);
+            }
+        }
     },
 
     // When using handlebars templates, the child views are created only upon rendering, not in init.
@@ -1973,6 +1848,11 @@ Flame.LayoutSupport = {
         this.consultLayoutManager();
     },
 
+    beforeRender: function(buffer) {
+        this._renderElementAttributes(buffer);
+        this._super(buffer);
+    },
+
     childViewsDidChange: function() {
         this._super.apply(this, arguments);
         this.consultLayoutManager();
@@ -1980,7 +1860,7 @@ Flame.LayoutSupport = {
 
     _initLayoutSupport: function() {
         // Do this initialization even if element is not currently using absolute positioning, just in case
-        var layout = Ember.Object.create(Ember.copy(this.get('layout')));  // Clone layout for each instance in case it's mutated (happens with split view)
+        var layout = Ember.Object.create(this.get('layout')); // Clone layout for each instance in case it's mutated (happens with split view)
 
         if (layout.width === undefined && layout.right === undefined && this.get('defaultWidth') !== undefined) {
             layout.width = this.get('defaultWidth');
@@ -1991,9 +1871,6 @@ Flame.LayoutSupport = {
 
         this.set('layout', layout);
 
-        // For changes to the layout it's enough to update the DOM
-        this.addObserver('layout', this, this.updateLayout);
-
         this._layoutSupportInitialized = true;
     },
 
@@ -2003,47 +1880,49 @@ Flame.LayoutSupport = {
 
         var layout = this.get('layout') || {};
         this._resolveLayoutBindings(layout);
-        var cssLayout = this._translateLayout(layout);
+        this._translateLayout(layout, buffer);
 
-        this._cssProperties.forEach(function(prop) {
-            var value = cssLayout[prop];
-            if (!Ember.none(value)) {
-                buffer.style(prop, value);
-            }
-        });
         if (layout.zIndex !== undefined) buffer.style('z-index', layout.zIndex);
 
         var backgroundColor = this.get('backgroundColor');
         if (backgroundColor !== undefined) buffer.style('background-color', backgroundColor);
-
-        buffer.addClass('flame-view');
-    },
-
-    render: function(buffer) {
-        this._renderElementAttributes(buffer);
-        return this._super(buffer);
     },
 
     _resolveLayoutBindings: function(layout) {
-        if (layout._bindingsResolved) return;  // Only add the observers once, even if rerendered
-        var self = this;
-        this._layoutProperties.forEach(function(prop) {
+        if (layout._bindingsResolved) return; // Only add the observers once, even if rerendered
+        var observer = function(prop, value) {
+            return function() {
+                this.adjustLayout(prop, this.get(value));
+            };
+        };
+        this._layoutObservers = [];
+        var length = this._layoutProperties.length;
+        for (var i = 0; i < length; i++) {
+            var prop = this._layoutProperties[i];
             var value = layout[prop];
             // Does it look like a property path (and not e.g. '50%')?
-            if (!Ember.none(value) && 'string' === typeof value && value !== '' && isNaN(parseInt(value, 10))) {
-                // TODO remove the observer when view destroyed?
-                self.addObserver(value, self, function() {
-                    self.adjustLayout(prop, self.getPath(value));
-                });
-                layout[prop] = self.getPath(value);
+            if (typeof value === 'string' && value !== '' && isNaN(parseInt(value, 10))) {
+                this.addObserver(value, this, observer(prop, value));
+                // Keep track of the observers we add so they can be removed later
+                this._layoutObservers.push(value);
+                layout[prop] = this.get(value);
             }
-        });
+        }
         layout._bindingsResolved = true;
     },
 
-    // Given a layout hash, translates possible centerX and centerY to appropriate CSS properties
-    _translateLayout: function(layout) {
+    // Given a layout hash, translates possible centerX and centerY to appropriate CSS properties.
+    // If a buffer is given, renders the CSS styles to that buffer.
+    _translateLayout: function(layout, buffer) {
         var cssLayout = {};
+
+        if (layout.maxHeight !== undefined) {
+            cssLayout.overflow = 'auto';
+        }
+
+        if (layout.overflow) {
+            cssLayout.overflow = layout.overflow;
+        }
 
         cssLayout.width = layout.width;
         if (layout.centerX === undefined) {
@@ -2063,13 +1942,19 @@ Flame.LayoutSupport = {
             cssLayout['margin-top'] = (-((layout.height || 0) / 2) + layout.centerY) + 'px';
         }
 
-        this._cssProperties.forEach(function(prop) {
+        var i, length = this._cssProperties.length;
+        for (i = 0; i < length; i++) {
+            var prop = this._cssProperties[i];
             var value = cssLayout[prop];
             // If a number or a string containing only a number, append 'px'
-            if (value !== undefined && ('number' === typeof value || parseInt(value, 10).toString() === value)) {
-                cssLayout[prop] = value+'px';
+            if (value !== undefined && (typeof value === 'number' || parseInt(value, 10).toString() === value)) {
+                cssLayout[prop] = value += 'px';
             }
-        });
+
+            if (buffer && !Ember.isNone(value)) {
+                buffer.style(prop, value);
+            }
+        }
 
         return cssLayout;
     },
@@ -2081,15 +1966,14 @@ Flame.LayoutSupport = {
         // that several views might be sharing the layout property. So just ignore the call if not initialized.
         if (!this._layoutSupportInitialized) return;
 
-        // This if needed to prevent endless loop as the layout manager is likely to update the children, causing this method to be called again
+        var layoutManager = this.get('layoutManager');
+        if (!layoutManager) return;
+
+        // This is needed to prevent endless loop as the layout manager is likely to update the children, causing this method to be called again
         if (!this._layoutChangeInProgress) {
             this._layoutChangeInProgress = true;
-            try {
-                var layoutManager = this.get('layoutManager');
-                if (layoutManager !== undefined) layoutManager.setupLayout(this);
-            } finally {
-                this._layoutChangeInProgress = false;
-            }
+            layoutManager.setupLayout(this);
+            this._layoutChangeInProgress = false;
         }
     },
 
@@ -2108,11 +1992,16 @@ Flame.LayoutSupport = {
             newValue = value;
         } else if (increment !== undefined) {
             newValue = oldValue + increment;
-        } else throw 'Give either a new value or an increment!';
+        } else {
+            throw new Error('Give either a new value or an increment!');
+        }
 
         if (oldValue !== newValue) {
             layout[property] = newValue;
             this.updateLayout();
+            if (property === 'maxHeight') {
+                this.consultLayoutManager();
+            }
         }
     },
 
@@ -2132,28 +2021,87 @@ Flame.LayoutSupport = {
 
         var parentView = this.get('parentView');
         if (parentView && parentView.layoutDidChangeFor) parentView.layoutDidChangeFor(this);
-    }.observes('isVisible'),
+    }.observes('isVisible', 'layout'),
 
     // XXX: isVisible property doesn't seem to always get set properly, so make sure it is true
-    isVisible: true,
-
-    _isVisibleWillChange: function() {
-        var callback;
-        if (!this.get('isVisible')) {
-            callback = 'willBecomeVisible';
-        } else {
-            callback = 'willBecomeHidden';
-        }
-        this.invokeRecursively(function(view) {
-            if (view[callback]) view[callback].apply(view);
-        });
-    }.observesBefore('isVisible')
+    isVisible: true
 };
 
+})();
+(function() {
+'use strict';
+
+Flame.ViewSupport = {
+    concatenatedProperties: ['displayProperties'],
+    displayProperties: [],
+    resetClassNames: false,
+
+    init: function() {
+        this._super();
+
+        // Add observers for displayProperties so that the view gets rerendered if any of them changes
+        var properties = this.get('displayProperties') || [];
+        var length = properties.length;
+        for (var i = 0; i < length; i++) {
+            var property = properties[i];
+            this.addObserver(property, this, this.rerender);
+        }
+
+        // Remove classNames up to Flame.View to make it easier to define custom
+        // styles for buttons, checkboxes etc...
+        // We only want to do this in the init of class that sets the flag
+        if (this.get('resetClassNames') && Object.getPrototypeOf) {
+            var superClassNames = this._collectSuperClassNames();
+            var classNames = this.get('classNames').removeObjects(superClassNames);
+            this.set('classNames', classNames);
+        }
+    },
+
+    willDestroy: function() {
+        this._super();
+        var properties = this.get('displayProperties') || [];
+        var length = properties.length;
+        for (var i = 0; i < length; i++) {
+            this.removeObserver(properties[i]);
+        }
+    },
+
+    createChildView: function(view, attrs) {
+        view = this._super(view, attrs);
+        if (view instanceof Ember.View && Flame._bindPrefixedBindings(view)) {
+            Ember.finishChains(view);
+        }
+        return view;
+    },
+
+    /**
+      Collects the classNames that were defined in super classes, but not
+      classNames in Flame.View or superclasses that are above it in the
+      class hierarchy.
+    */
+    _collectSuperClassNames: function() {
+        var superClassNames = [];
+        var superClass = Object.getPrototypeOf(Object.getPrototypeOf(this));
+        while (superClass && superClass.constructor !== Flame.View) {
+            superClassNames.pushObjects(superClass.classNames || []);
+            superClass = Object.getPrototypeOf(superClass);
+        }
+        // Add back the classNames from Flame.View and deeper
+        if (superClass.constructor === Flame.View) {
+            superClassNames.removeObjects(superClass.classNames);
+        }
+        return superClassNames;
+    }
+};
+
+})();
+(function() {
+'use strict';
 
 
 
-/*
+
+/**
   Layout managers are helpers that you can delegate setting the layout properties to when you get
   tired of doing it manually. They can also update the layout on the fly by reacting to changes
   in the layout of child views.
@@ -2162,7 +2110,12 @@ Flame.LayoutSupport = {
 Flame.LayoutManager = Ember.Object.extend({
     setupLayout: undefined
 });
-/*
+
+})();
+(function() {
+'use strict';
+
+/**
   VerticalStackLayoutManager is a layout manager that stacks the children vertically, with optional
   top margin, spacing and bottom margin. Use in your view e.g. like this;
 
@@ -2183,56 +2136,61 @@ Flame.VerticalStackLayoutManager = Flame.LayoutManager.extend({
     spacing: 0,
 
     setupLayout: function(view) {
-        var self = this;
-        var top = self.get('topMargin');
-        var fluid = false, isFirst = true;
+        var top = this.get('topMargin');
+        var fluid = false;
+        var maxHeight = view.get('layout.maxHeight');
 
         // Filter out views that are not affected by the layout manager
-        var views = view.get('childViews').filter(function(childView) {
+        var views = view.toArray().filter(function(childView) {
             return childView.get('ignoreLayoutManager') !== true &&
                 (childView.get('isVisible') || childView.get('isVisible') === null) && // isVisible is initially null
                 childView.get('layout');
         });
-        var len = views.get('length');
 
+        var length = views.get('length');
         views.forEach(function(childView, i) {
-            if ('string' === typeof childView) throw 'Child views have not yet been initialized!';
+            Ember.assert('Child views have not yet been initialized!', typeof childView !== 'string');
 
-            if (!isFirst) {  // Cannot check the index because some child views may be hidden and must be ignored
-                top += self.get('spacing');
-            } else {
-                isFirst = false;
-            }
+            if (i > 0) top += this.get('spacing');
 
             var layout = childView.get('layout');
-            childView._resolveLayoutBindings(layout);  // XXX ugly
-            Ember.assert('All child views must define layout when using VerticalStackLayoutManager!', !Ember.none(layout));
+            childView._resolveLayoutBindings(layout); // XXX ugly
 
             top += (layout.topMargin || 0);
-            childView.adjustLayout('top', top);  // Use adjustLayout, it checks if the property changes (can trigger a series of layout updates)
+            childView.adjustLayout('top', top); // Use adjustLayout, it checks if the property changes (can trigger a series of layout updates)
             top += (layout.topPadding || 0) + (layout.bottomPadding || 0);  // if view has borders, these can be used to compensate
 
             var height = layout.height;
-            if ('string' === typeof height) height = parseInt(height, 10);
-            if (i < len - 1) {  // XXX should not check the index, this check should only consider visible child views
-                Ember.assert('All child views except last one must define layout.height when using VerticalStackLayoutManager!', !Ember.none(height));
+            if (typeof height === 'string') height = parseInt(height, 10);
+            if (i < length - 1) { // XXX should not check the index, this check should only consider visible child views
+                Ember.assert('All child views except last one must define layout.height when using VerticalStackLayoutManager!', !Ember.isNone(height));
             }
 
-            if (Ember.none(layout.height)) {
+            if (Ember.isNone(layout.height)) {
                 fluid = true;
             } else {
                 top += height;
             }
-        });
+        }, this);
 
         // fluid == true means that the last child has no height set, meaning that it's meant to fill in the rest of the parent's view.
         // In that case, we must not set parent's height either, because the system is supposed to remain fluid (i.e. bottom is set).
         if (!fluid) {
             top += this.get('bottomMargin');
+        }
+        if (maxHeight !== undefined && top > maxHeight) {
+            top = maxHeight;
+        }
+        if (!fluid || maxHeight !== undefined) {
             view.adjustLayout('height', top);
         }
     }
 });
+
+})();
+(function() {
+'use strict';
+
 
 
 
@@ -2243,6 +2201,7 @@ Ember.View.reopen({
     firstDescendantWithProperty: function(property) {
         var result;
         this.forEachChildView(function(childView) {
+            if (!(childView instanceof Ember.View)) return;
             if (result === undefined) {
                 if (childView.get(property)) {
                     result = childView;
@@ -2260,70 +2219,109 @@ Flame.reopen({
     ALIGN_RIGHT: 'align-right',
     ALIGN_CENTER: 'align-center',
 
-    POSITION_BELOW: 1 << 0,
-    POSITION_RIGHT: 1 << 1,
-    POSITION_LEFT: 1 << 2,
-    POSITION_ABOVE: 1 << 3,
-    POSITION_MIDDLE: 1 << 4,
-
     FOCUS_RING_MARGIN: 3
 });
 
-// Base class for Flame views. Can be used to hold child views or render a template. In Ember, you normally either use
-// Ember.View for rendering a template or Ember.ContainerView to render child views. But we want to support both here, so
-// that we can use e.g. Flame.ListItemView for items in list views, and the app can decide whether to use a template or not.
-Flame.View = Ember.ContainerView.extend(Flame.LayoutSupport, Flame.EventManager, {
-    displayProperties: [],
-    isFocused: false,  // Does this view currently have key focus?
+/**
+  Base class for Flame views. Can be used to hold child views or render a template. In Ember, you normally either use
+  Ember.View for rendering a template or Ember.ContainerView to render child views. But we want to support both here, so
+  that we can use e.g. Flame.ListItemView for items in list views, and the app can decide whether to use a template or not.
+*/
+Flame.View = Ember.ContainerView.extend(Flame.ViewSupport, Flame.LayoutSupport, Flame.EventManager, {
+    isFocused: false, // Does this view currently have key focus?
 
     init: function() {
+        // Adds support for conditionally rendering child views, e.g.:
+        //   childViews: ['labelView', 'hasButton:buttonView']
+        // will only render the buttonView if this.get('hasButton') is true.
+        var childViews = this.get('childViews');
+        if (!childViews) {
+            this._super();
+            return;
+        }
+        var length = childViews.length;
+        var removedCount = 0;
+        var childViewsToCreate;
+        for (var i = 0; i < length; i++) {
+            var childView = childViews[i];
+            if (childView.indexOf(':') > -1) {
+                childViewsToCreate = childViewsToCreate || childViews.slice(0);
+                var split = childView.split(':');
+                if (this.get(split[0])) {
+                    childViewsToCreate[i - removedCount] = split[1];
+                } else {
+                    childViewsToCreate.splice(i - removedCount, 1);
+                    removedCount++;
+                }
+            }
+        }
+        if (childViewsToCreate) this.set('childViews', childViewsToCreate);
+
         this._super();
-
-        // There's a 'gotcha' in Ember that we need to work around here: an Ember.View does not have child views in the sense
-        // that you cannot define them yourself. But when used with a handlebars template, Ember.View uses child views
-        // internally to keep track of dynamic portions in the template so that they can be updated in-place in the DOM.
-        // The template rendering process adds this kind of child views on the fly. The problem is that we need to extend
-        // Ember.ContainerView here (see above), and that observes the child views to trigger a re-render, which then happens
-        // when we're already in the middle of a render, crashing with error 'assertion failed: You need to provide an
-        // object and key to `get`' (happens because parent buffer in a render buffer is null).
-        if (this.get('template')) {
-            this.set('states', Ember.View.states);  // Use states from Ember.View to remedy the problem
-        }
-
-        // Add observers for displayProperties so that the view gets rerendered if any of them changes
-        var properties = this.get('displayProperties') || [];
-        for (var i = 0; i < properties.length; i++) {
-            var property = properties[i];
-            this.addObserver(property, this, this.rerender);
-        }
-
     },
 
     render: function(buffer) {
-        this._renderElementAttributes(buffer);
         // If a template is defined, render that, otherwise use ContainerView's rendering (render childViews)
+        var get = Ember.get;
         var template = this.get('template');
         if (template) {
-            // Copied from Ember.View for now
-            var output = template(this.get('templateContext'), { data: { view: this, buffer: buffer, isRenderData: true, keywords: {} } });
+            // TODO should just call Ember.View.prototype.render.call(this, buffer) here (for that we need to rename `layout` to something else first)
+            var context = get(this, 'context');
+            var keywords = this.cloneKeywords();
+            var output;
+
+            var data = {
+                view: this,
+                buffer: buffer,
+                isRenderData: true,
+                keywords: keywords,
+                insideGroup: get(this, 'templateData.insideGroup')
+            };
+
+            // Invoke the template with the provided template context, which
+            // is the view's controller by default. A hash of data is also passed that provides
+            // the template with access to the view and render buffer.
+
+            Ember.assert('template must be a function. Did you mean to call Ember.Handlebars.compile("...") or specify templateName instead?', typeof template === 'function');
+            // The template should write directly to the render buffer instead
+            // of returning a string.
+            output = template(context, { data: data });
+
+            // If the template returned a string instead of writing to the buffer,
+            // push the string onto the buffer.
             if (output !== undefined) { buffer.push(output); }
         } else {
-            return this._super(buffer);
+            this._super(buffer);
         }
     },
 
-    template: function(propertyName, value) {
-        if (propertyName === "template" && value !== undefined) return value;
-        var str = this.get('handlebars');
-        return str ? this._compileTemplate(str) : null;
-    }.property('templateName', 'handlebars').cacheable(),
+    // For Ember 1.0, removeChild on ContainerViews expects there not to be any SimpleHandlebarsView children
+    // Flame.View extends ContainerView, but it allows templates, so there will be SimpleHandlebarsViews children.
+    // This is the Ember.View implementation of removeChild for when there is a template.
+    removeChild: function(view) {
+        if (this.get('template')) {
+            // there is a template - use Ember.View's `removeChild`
+            return Ember.View.prototype.removeChild.call(this, view);
+        } else {
+            // no template - use Ember.ContainerView's `removeChild`
+            return this._super(view);
+        }
+    },
+
+    template: function() {
+        var handlebarsStr = this.get('handlebars');
+        if (handlebarsStr) return this._compileTemplate(handlebarsStr);
+
+        var templateName = this.get('templateName'),
+            template = this.templateForName(templateName, 'template');
+        return template || null;
+    }.property('templateName', 'handlebars'),
 
     // Compiles given handlebars template, with caching to make it perform better. (Called repetitively e.g.
     // when rendering a list view whose item views use a template.)
     _compileTemplate: function(template) {
         var compiled = Flame._templateCache[template];
         if (!compiled) {
-            //console.log('Compiling template: %s', template);
             Flame._templateCache[template] = compiled = Ember.Handlebars.compile(template);
         }
         return compiled;
@@ -2331,23 +2329,19 @@ Flame.View = Ember.ContainerView.extend(Flame.LayoutSupport, Flame.EventManager,
 });
 
 Flame._templateCache = {};
+
+})();
+(function() {
+'use strict';
+
 Flame.ImageView = Flame.View.extend({
-    templateContext: function() {
-        return { value: this.get('value') };
-    }.property('value'),
-
-    handlebars: '<img {{bindAttr src="value"}}>'
+    handlebars: '<img {{bind-attr src="view.value"}}>'
 });
 
-/* 
-   Use this view at the top of the view hierarchy, either directly or as a superclass.
-   The rootView property is needed for being able to set up the prefixed bindings, see
-   Flame._bindPrefixedBindings for more info.
-*/
+})();
+(function() {
+'use strict';
 
-Flame.RootView = Flame.View.extend({
-    rootView: true
-});
 Flame.LabelView = Flame.View.extend(Flame.ActionSupport, {
     layout: { left: 0, top: 0 },
     classNames: ['flame-label-view'],
@@ -2358,34 +2352,34 @@ Flame.LabelView = Flame.View.extend(Flame.ActionSupport, {
     isDisabled: false,
     allowWrapping: false,
 
-    handlebars: '{{value}}',
+    handlebars: '{{view.value}}',
 
-    render: function(buffer) {
-        var height = this.getPath('layout.height');
+    beforeRender: function(buffer) {
+        var height = this.get('layout.height');
         if (this.get('useAbsolutePosition') &&
-            !Ember.none(height) &&
+            !Ember.isNone(height) &&
             !this.get('allowWrapping')) {
-            buffer.style('line-height', height+'px');
+            buffer.style('line-height', height + 'px');
         }
         this._super(buffer);
     },
 
-    mouseDown: function(evt) {
+    mouseDown: function(event) {
         return this.fireAction();
     },
 
     // We should never let mouseUp propagate. If we handled mouseDown, we will receive mouseUp and obviously
     // it shouldn't be propagated. If we didn't handle mouseDown (there was no action), it was propagated up
     // and the mouse responder logic will relay mouseUp directly to the view that handler mouseDown.
-    mouseUp: function(evt) {
+    mouseUp: function(event) {
         return true;
     },
 
     // Apply the same logic to touchStart and touchEnd
-    touchStart: function(evt) {
+    touchStart: function(event) {
         return this.fireAction();
     },
-    touchEnd: function(evt) {
+    touchEnd: function(event) {
         return true;
     }
 });
@@ -2397,16 +2391,12 @@ Flame.LabelView.reopenClass({
             layout: { left: left, top: top, width: width, height: height },
             value: value
         });
-    },
-
-    // Shortcut for creating label views using a binding
-    binding: function(valueBinding, left, top, width, height) {
-        return Flame.LabelView.extend({
-            layout: { left: left, top: top, width: width, height: height },
-            valueBinding: valueBinding
-        });
     }
 });
+
+})();
+(function() {
+'use strict';
 
 
 
@@ -2414,15 +2404,24 @@ Flame.LabelView.reopenClass({
 // top of each other. If they use a static z-index, all the panels would appear on top of all the modal panes.
 Flame._zIndexCounter = 100;
 
+Flame.reopen({
+    POSITION_BELOW:  1 << 0,
+    POSITION_RIGHT:  1 << 1,
+    POSITION_LEFT:   1 << 2,
+    POSITION_ABOVE:  1 << 3,
+    POSITION_MIDDLE: 1 << 4
+});
+
 // A pop-up panel, modal or non-modal. The panel is destroyed on closing by default. If you intend to reuse the same
 // panel instance, set destroyOnClose: false.
-Flame.Panel = Flame.RootView.extend({
+Flame.Panel = Flame.View.extend({
     classNames: ['flame-panel'],
     childViews: ['titleView', 'contentView', 'resizeView'],
     destroyOnClose: true,
     acceptsKeyResponder: true,
     isModal: true,
     allowClosingByClickingOutside: true,
+    allowClosingByCancelButton: false,
     allowMoving: false,
     dimBackground: true,
     title: null,
@@ -2432,8 +2431,8 @@ Flame.Panel = Flame.RootView.extend({
     // Default minimum size for the resized panel
     minHeight: 52,
     minWidth: 100,
-
-    _keyResponderOnPopup: undefined,
+    // When given a unique id, the panel's layout (so far only position) will be persisted
+    layoutPersistenceKey: null,
 
     init: function() {
         Ember.assert('Flame.Panel needs a contentView!', !!this.get('contentView'));
@@ -2441,22 +2440,30 @@ Flame.Panel = Flame.RootView.extend({
     },
 
     titleView: Flame.View.extend(Flame.Statechart, {
-        layout: { left: 0, right: 0, height: 26, bottomPadding: 1 },
+        layout: { left: 0, right: 0, height: 'height', bottomPadding: 1 },
         classNames: ['flame-panel-title'],
-        childViews: ['labelView'],
-        isVisible: Flame.computed.notEquals('parentView.title', null),
-        initialState: 'idle',
+        isVisible: Ember.computed.notEqual('parentView.title', null),
+        initialFlameState: 'idle',
+        childViews: ['headerView'],
+
+        height: function() {
+            return this.get('parentView.headerView.height') || 26;
+        }.property('parentView.headerView.height'),
+
+        headerView: function() {
+            return this.get('parentView.headerView') || this.get('labelView');
+        }.property('parentView.headerView'),
 
         labelView: Flame.LabelView.extend({
             layout: { left: 4, right: 4, top: 2 },
             textAlign: Flame.ALIGN_CENTER,
-            valueBinding: 'parentView.parentView.title'
+            value: Ember.computed.alias('parentView.parentView.title')
         }),
 
         idle: Flame.State.extend({
             mouseDown: function(event) {
                 var owner = this.get('owner');
-                if (!owner.getPath('parentView.allowMoving')) {
+                if (!owner.get('parentView.allowMoving')) {
                     return true;
                 }
                 owner._pageX = event.pageX;
@@ -2464,7 +2471,7 @@ Flame.Panel = Flame.RootView.extend({
                 var offset = owner.get('parentView').$().offset();
                 owner._panelX = offset.left;
                 owner._panelY = offset.top;
-                this.gotoState('moving');
+                this.gotoFlameState('moving');
                 return true;
             },
             touchStart: function(event) {
@@ -2475,14 +2482,20 @@ Flame.Panel = Flame.RootView.extend({
         }),
 
         moving: Flame.State.extend({
+            enterState: function() {
+                this.element = this.get('owner.parentView').$();
+                this.windowHeight = jQuery(window).height();
+                this.windowWidth = jQuery(window).width();
+                this.elementWidth = this.element.outerWidth();
+                this.elementHeight = this.element.outerHeight();
+            },
             mouseMove: function(event) {
                 var owner = this.get('owner');
                 var newX = owner._panelX + (event.pageX - owner._pageX);
                 var newY = owner._panelY + (event.pageY - owner._pageY);
-                var element = owner.get('parentView').$();
-                newX = Math.max(5, Math.min(newX, Ember.$(window).width() - element.outerWidth() - 5));  // Constrain inside window
-                newY = Math.max(5, Math.min(newY, Ember.$(window).height() - element.outerHeight() - 5));
-                element.css({left: newX, top: newY, right: '', bottom: '', marginLeft: '', marginTop: ''});
+                this.newX = Math.max(5, Math.min(newX, this.windowWidth - this.elementWidth - 5));  // Constrain inside window
+                this.newY = Math.max(5, Math.min(newY, this.windowHeight - this.elementHeight - 5));
+                this.element.css({ left: this.newX, top: this.newY, right: '', bottom: '', marginLeft: '', marginTop: '' });
                 return true;
             },
             touchMove: function(event) {
@@ -2492,8 +2505,19 @@ Flame.Panel = Flame.RootView.extend({
                 this.mouseMove(this.normalizeTouchEvents(event));
                 return true;
             },
-            mouseUp: Flame.State.gotoHandler('idle'),
-            touchEnd: Flame.State.gotoHandler('idle')
+            mouseUp: Flame.State.gotoFlameState('idle'),
+            touchEnd: Flame.State.gotoFlameState('idle'),
+            exitState: function() {
+                // Save panel layout
+                var layoutPersistenceKey = this.get('owner').nearestOfType(Flame.Panel).get('layoutPersistenceKey');
+                if (layoutPersistenceKey) {
+                    var panelLayouts = JSON.parse(localStorage.getItem('panelLayouts')) || {};
+                    panelLayouts[layoutPersistenceKey] = {
+                        position: { left: this.newX, top: this.newY }
+                    };
+                    localStorage.setItem('panelLayouts', JSON.stringify(panelLayouts));
+                }
+            }
         })
     }),
 
@@ -2501,21 +2525,25 @@ Flame.Panel = Flame.RootView.extend({
         layout: { bottom: 3, right: 3, height: 16, width: 16 },
         ignoreLayoutManager: true,
         classNames: ['flame-resize-thumb'],
-        isVisibleBinding: '^isResizable',
-        initialState: 'idle',
+        isVisible: Ember.computed.alias('parentView.isResizable'),
+        initialFlameState: 'idle',
+        isResizing: false,
 
         idle: Flame.State.extend({
+            enterState: function(event) {
+                this.set('owner.isResizing', false);
+            },
             mouseDown: function(event) {
                 var owner = this.get('owner');
                 var panelElement = owner.get('parentView').$();
-                if (!owner.getPath('parentView.isResizable')) {
+                if (!owner.get('parentView.isResizable')) {
                     return true;
                 }
                 owner._pageX = event.pageX;
                 owner._pageY = event.pageY;
                 owner._startW = panelElement.outerWidth();
                 owner._startH = panelElement.outerHeight();
-                this.gotoState('resizing');
+                this.gotoFlameState('resizing');
                 return true;
             },
             touchStart: function(event) {
@@ -2525,6 +2553,9 @@ Flame.Panel = Flame.RootView.extend({
             }
         }),
         resizing: Flame.State.extend({
+            enterState: function(event) {
+                this.set('owner.isResizing', true);
+            },
             mouseMove: function(event) {
                 var owner = this.get('owner');
                 var parentView = owner.get('parentView');
@@ -2532,7 +2563,7 @@ Flame.Panel = Flame.RootView.extend({
                 var newH = owner._startH + (event.pageY - owner._pageY);
                 newW = Math.max(parentView.get('minWidth'), newW);  // Minimum panel width
                 newH = Math.max(parentView.get('minHeight'), newH);  // Minimum panel height: title bar plus this "thumb"
-                parentView.$().css({width: newW, height: newH });
+                parentView.$().css({ width: newW, height: newH });
                 return true;
             },
             touchMove: function(event) {
@@ -2542,33 +2573,33 @@ Flame.Panel = Flame.RootView.extend({
                 this.mouseMove(this.normalizeTouchEvents(event));
                 return true;
             },
-            mouseUp: Flame.State.gotoHandler('idle'),
-            touchEnd: Flame.State.gotoHandler('idle')
+            mouseUp: Flame.State.gotoFlameState('idle'),
+            touchEnd: Flame.State.gotoFlameState('idle')
         })
     }),
 
     // This is the pane that's used to obscure the background if isModal === true
     modalPane: function() {
-        return Flame.RootView.create({
+        return Flame.View.create({
             layout: { left: 0, top: 0, right: 0, bottom: 0 },
             classNames: ['flame-modal-pane'],
             classNameBindings: ['parentPanel.dimBackground'],
 
             parentPanel: null,
             mouseDown: function() {
-                if (this.getPath('parentPanel.allowClosingByClickingOutside')) {
+                if (this.get('parentPanel.allowClosingByClickingOutside')) {
                     this.get('parentPanel').close();
                 }
                 return true;
             },
             touchStart: function() {
-                if (this.getPath('parentPanel.allowClosingByClickingOutside')) {
+                if (this.get('parentPanel.allowClosingByClickingOutside')) {
                     this.get('parentPanel').close();
                 }
                 return true;
             }
         });
-    }.property(),
+    }.property().volatile(),
 
     insertNewline: function(event) {
         var defaultButton = this.firstDescendantWithProperty('isDefault');
@@ -2578,6 +2609,21 @@ Flame.Panel = Flame.RootView.extend({
         return true;
     },
 
+    cancel: function(event) {
+        if (this.get('allowClosingByCancelButton')) {
+            this.close();
+        }
+        return true;
+    },
+
+    _getDimensionsForAnchorElement: function(anchorElement) {
+        if (anchorElement.closest('svg').length > 0) {
+            return { height: anchorElement[0].getBBox().height, width: anchorElement[0].getBBox().width };
+        } else {
+            return { height: anchorElement.outerHeight(), width: anchorElement.outerWidth() };
+        }
+    },
+
     _layoutRelativeTo: function(anchor, position) {
         position = position || Flame.POSITION_BELOW;
 
@@ -2585,35 +2631,38 @@ Flame.Panel = Flame.RootView.extend({
         var anchorElement = anchor instanceof jQuery ? anchor : anchor.$();
         var offset = anchorElement.offset();
 
-        var contentView = this.get('childViews')[0];
+        var contentView = this.objectAt(0);
         if (contentView && contentView.get('layout') && contentView.get('layout').height && (!layout || !layout.height)) {
             layout.height = contentView.get('layout').height;
         }
 
+        var dimensions = this._getDimensionsForAnchorElement(anchorElement);
+
         if (position & (Flame.POSITION_BELOW | Flame.POSITION_ABOVE)) {
-            layout.top = offset.top + ((position & Flame.POSITION_BELOW) ? anchorElement.outerHeight() : -layout.height);
+            layout.top = offset.top + ((position & Flame.POSITION_BELOW) ? dimensions.height : -layout.height);
             layout.left = offset.left;
             if (position & Flame.POSITION_MIDDLE) {
-                layout.left = layout.left - (layout.width / 2) + (anchorElement.outerWidth() / 2);
+                layout.left = layout.left - (layout.width / 2) + (dimensions.width / 2);
             }
         } else if (position & (Flame.POSITION_RIGHT | Flame.POSITION_LEFT)) {
             layout.top = offset.top;
-            layout.left = offset.left + ((position & Flame.POSITION_RIGHT) ? anchorElement.outerWidth() : -layout.width);
+            layout.left = offset.left + ((position & Flame.POSITION_RIGHT) ? dimensions.width : -layout.width);
             if (position & Flame.POSITION_MIDDLE) {
-                layout.top = layout.top - (layout.height / 2) + (anchorElement.outerHeight() / 2);
+                layout.top = layout.top - (layout.height / 2) + (dimensions.height / 2);
             }
         } else {
             Ember.assert('Invalid position for panel', false);
         }
 
         // Make sure the panel is still within the viewport horizontally ...
-        var _window = Ember.$(window);
-        if (layout.left + layout.width > _window.width() - 10) {
-            layout.left = _window.width() - layout.width - 10;
+        var $window = Ember.$(window);
+        var windowWidth = $window.width();
+        if (layout.left + layout.width > windowWidth - 10) {
+            layout.left = windowWidth - layout.width - 10;
             layout.movedX = true;
         }
         // ... and vertically
-        if ((position & Flame.POSITION_BELOW && (layout.top + layout.height > _window.height() - 10) && offset.top - layout.height >= 0) ||
+        if ((position & Flame.POSITION_BELOW && (layout.top + layout.height > $window.height() - 10) && offset.top - layout.height >= 0) ||
             (position & Flame.POSITION_ABOVE && (layout.top < 0))) {
             layout.movedY = true;
         } else if (layout.top < 0) {
@@ -2628,25 +2677,40 @@ Flame.Panel = Flame.RootView.extend({
                 var modalPane = this.get('modalPane');
                 modalPane.set('parentPanel', this);
                 modalPane.get('layout').zIndex = Flame._zIndexCounter;
-                modalPane.append();
+                Ember.run(function() {
+                    modalPane.append();
+                });
                 this.set('_modalPane', modalPane);
             }
 
             if (anchor) {
-                this.set("layout", this._layoutRelativeTo(anchor, position));
+                this.set('layout', this._layoutRelativeTo(anchor, position));
             }
             this.get('layout').zIndex = Flame._zIndexCounter + 10;
             Flame._zIndexCounter += 100;
 
             this.append();
             this.set('isShown', true);
+            this.set('isVisible', true);
             if (this.get('acceptsKeyResponder')) this.becomeKeyResponder(false);
-            this._focusDefaultInput();
+            // Try to restore panel layout
+            var layoutPersistenceKey = this.get('layoutPersistenceKey');
+            if (layoutPersistenceKey) {
+                var panelLayouts = JSON.parse(localStorage.getItem('panelLayouts')) || {};
+                if (panelLayouts[layoutPersistenceKey]) {
+                    var layout = this.get('layout');
+                    layout.top = panelLayouts[layoutPersistenceKey].position.top;
+                    layout.left = panelLayouts[layoutPersistenceKey].position.left;
+                    layout.centerX = undefined;
+                    layout.centerY = undefined;
+                }
+            }
+            Ember.run.scheduleOnce('afterRender', this, this._focusDefaultInput);
         }
     },
 
     close: function() {
-        if (this.isDestroyed) { return; }
+        if (this.isDestroyed) return;
         if (this.get('isShown')) {
             if (this.get('isModal')) {
                 this.get('_modalPane').remove();
@@ -2654,6 +2718,7 @@ Flame.Panel = Flame.RootView.extend({
             }
             this.remove();
             this.set('isShown', false);
+            this.set('isVisible', false);
             if (this.get('acceptsKeyResponder')) this.resignKeyResponder();
             Flame._zIndexCounter -= 100;
 
@@ -2662,13 +2727,15 @@ Flame.Panel = Flame.RootView.extend({
     },
 
     _focusDefaultInput: function() {
-        // Let Ember render the element before we focus it
-        Ember.run.next(this, function() {
-            var defaultFocus = this.firstDescendantWithProperty('isDefaultFocus');
-            if (defaultFocus) { defaultFocus.becomeKeyResponder(); }
-        });
+        var defaultFocus = this.firstDescendantWithProperty('isDefaultFocus');
+        if (defaultFocus) defaultFocus.becomeKeyResponder();
     }
 });
+
+})();
+(function() {
+'use strict';
+
 Flame.ButtonView = Flame.View.extend(Flame.ActionSupport, Flame.Statechart, {
     defaultHeight: 24,
     classNames: ['flame-button-view'],
@@ -2680,13 +2747,16 @@ Flame.ButtonView = Flame.View.extend(Flame.ActionSupport, Flame.Statechart, {
     isDisabled: false,
     isDefault: false,  // If true, fires in a panel when user hits enter
     isSticky: false,  // If true, each click (mouseUp to be specific) toggles 'isSelected'
-    initialState: 'idle',
+    initialFlameState: 'idle',
 
-    handlebars: "<label class='flame-button-label'>{{title}}</label>",
+    handlebars: '<label class="flame-button-label">{{view.title}}</label>',
 
-    render: function(buffer) {
-        var height = this.getPath('layout.height');
-        if (this.get('useAbsolutePosition') && !Ember.none(height)) buffer.style('line-height', (height-2)+'px');  // -2 to account for borders
+    beforeRender: function(buffer) {
+        var height = this.get('layout.height');
+        if (this.get('useAbsolutePosition') &&
+            !Ember.isNone(height)) {
+            buffer.style('line-height', (height - 2) + 'px'); // -2 to account for borders
+        }
         this._super(buffer);
     },
 
@@ -2697,31 +2767,34 @@ Flame.ButtonView = Flame.View.extend(Flame.ActionSupport, Flame.Statechart, {
 
     idle: Flame.State.extend({
         mouseEnter: function() {
-            this.gotoState('hover');
+            this.gotoFlameState('hover');
             return true;
         },
 
         touchStart: function(event) {
-            this.gotoState('mouseDownInside');
+            this.gotoFlameState('mouseDownInside');
             return true;
         },
 
         simulateClick: function() {
-            this.gotoState('hover');
-            this.get('owner').simulateClick();
-            Ember.run.later(this.get('owner'), 'mouseLeave', 150);
+            this.gotoFlameState('hover');
+            this.get('owner').mouseDown();
+            Ember.run.later(this.get('owner'), function() {
+                this.mouseUp();
+                this.mouseLeave();
+            }, 150);
         }
     }),
 
     hover: Flame.State.extend({
         mouseLeave: function() {
-            this.gotoState('idle');
+            this.gotoFlameState('idle');
             return true;
         },
 
         mouseDown: function() {
-            if (!this.getPath('owner.isDisabled')) {
-                this.gotoState('mouseDownInside');
+            if (!this.get('owner.isDisabled')) {
+                this.gotoFlameState('mouseDownInside');
             }
             return true;
         },
@@ -2750,24 +2823,24 @@ Flame.ButtonView = Flame.View.extend(Flame.ActionSupport, Flame.Statechart, {
             var owner = this.get('owner');
             owner.fireAction();
             if (owner.get('isSticky')) {
-                owner.set('isSelected', !owner.get('isSelected'));
+                owner.toggleProperty('isSelected');
             }
         },
 
         mouseUp: function() {
             this._handleClick();
-            this.gotoState('hover');
+            this.gotoFlameState('hover');
             return true;
         },
 
         touchEnd: function(event) {
             this._handleClick();
-            this.gotoState('idle');
+            this.gotoFlameState('idle');
             return true;
         },
 
         mouseLeave: function() {
-            this.gotoState('mouseDownOutside');
+            this.gotoFlameState('mouseDownOutside');
             return true;
         },
 
@@ -2782,30 +2855,101 @@ Flame.ButtonView = Flame.View.extend(Flame.ActionSupport, Flame.Statechart, {
 
     mouseDownOutside: Flame.State.extend({
         mouseUp: function() {
-            this.gotoState('idle');
+            this.gotoFlameState('idle');
             return true;
         },
 
         mouseEnter: function() {
-            this.gotoState('mouseDownInside');
+            this.gotoFlameState('mouseDownInside');
             return true;
         }
     })
 });
 
+})();
+(function() {
+'use strict';
 
 
 
+
+
+
+var alias = Ember.computed.alias,
+    nearest = Flame.computed.nearest;
 
 Flame.AlertPanel = Flame.Panel.extend();
 
-Flame.AlertPanel.INFO_ICON = Flame.image('info_icon.png');
-Flame.AlertPanel.WARN_ICON = Flame.image('warn_icon.png');
-Flame.AlertPanel.ERROR_ICON = Flame.image('error_icon.png');
+Flame.AlertPanel.INFO_ICON = Flame.image('info_icon.svg');
+Flame.AlertPanel.WARN_ICON = Flame.image('warn_icon.svg');
+Flame.AlertPanel.ERROR_ICON = Flame.image('error_icon.svg');
+
+Flame.AlertPanelButtonView = Flame.View.extend({
+    layout: { width: '100%', right: 0, height: 30 },
+    childViews: ['cancelButtonView', 'confirmButtonView'],
+    cancelButtonTitle: 'Cancel',
+    confirmButtonTitle: 'OK',
+    isCancelVisible: true,
+    isConfirmVisible: true,
+    isCancelDisabled: false,
+    isConfirmDisabled: false,
+    alertPanelView: null,
+
+    cancelButtonView: Flame.ButtonView.extend({
+        layout: { width: 90, bottom: 2, right: 110 },
+        title: alias('parentView.cancelButtonTitle'),
+        isVisible: alias('parentView.isCancelVisible'),
+        isDisabled: alias('parentView.isCancelDisabled'),
+        action: function() {
+            this.get('parentView.alertPanelView').onCancel();
+        }
+    }),
+
+    confirmButtonView: Flame.ButtonView.extend({
+        layout: { width: 90, bottom: 2, right: 2 },
+        title: alias('parentView.confirmButtonTitle'),
+        isVisible: alias('parentView.isConfirmVisible'),
+        isDisabled: alias('parentView.isConfirmDisabled'),
+        isDefault: true,
+        action: function() {
+            this.get('parentView.alertPanelView').onConfirm();
+        }
+    })
+});
+
+Flame.AlertPanelMessageView = Flame.View.extend({
+    layout: { left: 10, right: 2, height: 'measuredHeight' },
+    childViews: ['iconView', 'messageView'],
+    messageViewWidth: 0,
+    measuredHeight: function() {
+        var width  = "width: %@px;".fmt(this.get('messageViewWidth'));
+        var parentClasses = this.nearestOfType(Flame.AlertPanel).get('classNames').join(' ');
+        var elementClasses = this.get('messageView.classNames').join(' ');
+        var computedMessageViewHeight = Flame.measureString(this.get('message'), parentClasses, elementClasses, width).height;
+        return Math.max(Math.min(computedMessageViewHeight, 600), 50);
+    }.property('message', 'messageViewWidth'),
+    message: null,
+
+    iconView: Flame.ImageView.extend({
+        layout: { left: 10 },
+        value: nearest('icon')
+    }),
+
+    messageView: Flame.LabelView.extend({
+        layout: { left: 75, right: 2, height: null },
+        didInsertElement: function() {
+            this.set('parentView.messageViewWidth', this.$().width());
+        },
+        allowWrapping: true,
+        value: alias('parentView.message')
+    })
+});
 
 Flame.AlertPanel.reopen({
-    layout: { centerX: 0, centerY: -50, width: 400, height: 155 },
-    classNames: 'flame-alert-panel'.w(),
+    layout: { centerX: 0, centerY: -50, width: 400 },
+
+    layoutManager: Flame.VerticalStackLayoutManager.create(),
+    classNames: ['flame-alert-panel'],
     icon: Flame.AlertPanel.INFO_ICON,
     isModal: true,
     allowClosingByClickingOutside: false,
@@ -2815,40 +2959,23 @@ Flame.AlertPanel.reopen({
     isCloseable: true,
     title: '',
     message: '',
-    cancelButtonTitle: 'Cancel',
     confirmButtonTitle: 'OK',
+    cancelButtonTitle: 'Cancel',
 
     contentView: Flame.View.extend({
         layout: { left: 15, right: 15, top: 36, bottom: 15 },
-        childViews: 'iconView messageView cancelButtonView okButtonView'.w(),
+        layoutManager: Flame.VerticalStackLayoutManager.create({ topMargin: 20, bottomMargin: 17, spacing: 10 }),
+        childViews: ['messageView', 'buttonView'],
 
-        iconView: Flame.ImageView.extend({
-            layout: { left: 10, top: 10 },
-            valueBinding: '^icon'
+        messageView: Flame.AlertPanelMessageView.extend({
+            message: nearest('message')
         }),
-
-        messageView: Flame.LabelView.extend({
-            layout: { left: 75, top: 10, right: 2, bottom: 30 },
-            valueBinding: '^message'
-        }),
-
-        cancelButtonView: Flame.ButtonView.extend({
-            layout: { width: 90, bottom: 2, right: 110 },
-            titleBinding: '^cancelButtonTitle',
-            isVisibleBinding: '^isCancelVisible',
-            action: function() {
-                this.getPath('parentView.parentView').onCancel();
-            }
-        }),
-
-        okButtonView: Flame.ButtonView.extend({
-            layout: { width: 90, bottom: 2, right: 2 },
-            titleBinding: '^confirmButtonTitle',
-            isVisibleBinding: '^isConfirmVisible',
-            isDefault: true,
-            action: function() {
-                this.getPath('parentView.parentView').onConfirm();
-            }
+        buttonView: Flame.AlertPanelButtonView.extend({
+            confirmButtonTitle: nearest('confirmButtonTitle'),
+            cancelButtonTitle: nearest('cancelButtonTitle'),
+            alertPanelView: alias('parentView.parentView'),
+            isCancelVisible: nearest('isCancelVisible'),
+            isConfirmVisible: nearest('isConfirmVisible')
         })
     }),
 
@@ -2868,46 +2995,57 @@ Flame.AlertPanel.reopen({
     }
 });
 
-
 Flame.AlertPanel.reopenClass({
     info: function(config) {
         config = jQuery.extend(config || {}, {icon: Flame.AlertPanel.INFO_ICON, isCancelVisible: false});
-        return Flame.AlertPanel.create(config);
+        return this.createWithMixins(config);
     },
+
     warn: function(config) {
         config = jQuery.extend(config || {}, {icon: Flame.AlertPanel.WARN_ICON});
-        return Flame.AlertPanel.create(config);
+        return this.createWithMixins(config);
     },
+
     error: function(config) {
         config = jQuery.extend(config || {}, {icon: Flame.AlertPanel.ERROR_ICON});
-        return Flame.AlertPanel.create(config);
+        return this.createWithMixins(config);
     }
 });
-Flame.CollectionView =  Ember.CollectionView.extend(Flame.LayoutSupport, Flame.EventManager, {
-    classNames: ['flame-list-view']
+
+})();
+(function() {
+'use strict';
+
+Flame.CollectionView =  Ember.CollectionView.extend(Flame.ViewSupport, Flame.LayoutSupport, Flame.EventManager, {
+    classNames: ['flame-collection-view']
 });
+
+})();
+(function() {
+'use strict';
+
 Flame.MenuScrollViewButton = Flame.View.extend({
-    classNames: "scroll-element".w(),
-    classNameBindings: "directionClass isShown".w(),
+    classNames: ['scroll-element'],
+    classNameBindings: ['directionClass', 'isShown'],
 
     directionClass: function() {
-        return "scroll-%@".fmt(this.get("direction"));
-    }.property(),
+        return 'scroll-%@'.fmt(this.get('direction'));
+    }.property().volatile(),
 
     isShown: false,
-    direction : "down", // "up" / "down"
+    direction: 'down', // 'up' / 'down'
     useAbsolutePosition: true,
 
     mouseLeave: function() {
-        if (this.get("isShown")) {
-            this.get("parentView").stopScrolling();
+        if (this.get('isShown')) {
+            this.get('parentView').stopScrolling();
             return true;
         }
         return false;
     },
     mouseEnter: function() {
-        if (this.get("isShown")) {
-            this.get("parentView").startScrolling(this.get("direction") === "up" ? -1 : 1);
+        if (this.get('isShown')) {
+            this.get('parentView').startScrolling(this.get('direction') === 'up' ? -1 : 1);
             return true;
         }
         return false;
@@ -2919,22 +3057,20 @@ Flame.MenuScrollViewButton = Flame.View.extend({
 });
 
 Flame.MenuScrollView = Flame.View.extend({
-    classNames: 'menu-scroll-view'.w(),
-    useAbsolutePosition: true,
+    classNames: ['menu-scroll-view'],
     needScrolling: false,
     scrollDirection: 0,
-    scrollPosition: "top", //"top", "middle", "bottom"
+    scrollPosition: 'top', // 'top', 'middle', 'bottom'
 
-    childViews: "upArrow viewPort downArrow".w(),
-    scrollSize: 10, //How many pixels to scroll per scroll
+    childViews: ['upArrow', 'viewPort', 'downArrow'],
+    scrollSize: 10, // How many pixels to scroll per scroll
 
     viewPort: Flame.View.extend({
-        useAbsolutePosition: true,
-        classNames: "scroll-view-viewport".w()
+        classNames: ['scroll-view-viewport']
     }),
 
-    upArrow: Flame.MenuScrollViewButton.extend({direction:"up", layout: {height: 20, top: 0, width: "100%"}}),
-    downArrow: Flame.MenuScrollViewButton.extend({direction:"down", layout: {height: 20, bottom: 0, width: "100%"}}),
+    upArrow: Flame.MenuScrollViewButton.extend({direction: 'up', layout: { height: 20, top: 0, width: '100%' }}),
+    downArrow: Flame.MenuScrollViewButton.extend({direction: 'down', layout: { height: 20, bottom: 0, width: '100%' }}),
 
     willDestroyElement: function() {
         this._super();
@@ -2942,60 +3078,59 @@ Flame.MenuScrollView = Flame.View.extend({
     },
 
     setScrolledView: function(newContent) {
-        this.getPath("viewPort.childViews").replace(0, 1, [newContent]);
+        this.get('viewPort').replace(0, 1, [newContent]);
     },
 
     scrollPositionDidChange: function() {
-        var upArrow = this.get("upArrow");
-        var downArrow = this.get("downArrow");
-        var scrollPosition = this.get("scrollPosition");
-        upArrow.set("isShown", this.get("needScrolling") && scrollPosition !== "top");
-        downArrow.set("isShown", this.get("needScrolling") && scrollPosition !== "bottom");
-
-    }.observes("scrollPosition", "needScrolling"),
+        var upArrow = this.get('upArrow');
+        var downArrow = this.get('downArrow');
+        var scrollPosition = this.get('scrollPosition');
+        upArrow.set('isShown', this.get('needScrolling') && scrollPosition !== 'top');
+        downArrow.set('isShown', this.get('needScrolling') && scrollPosition !== 'bottom');
+    }.observes('scrollPosition', 'needScrolling'),
 
     startScrolling: function(scrollDirection) {
-        this.set("scrollDirection", scrollDirection);
+        this.set('scrollDirection', scrollDirection);
         this.scroll();
     },
 
     stopScrolling: function() {
-        this.set("scrollDirection", 0);
+        this.set('scrollDirection', 0);
         if (this._timer) {
             Ember.run.cancel(this._timer);
         }
     },
 
     _recalculateSizes: function() {
-        var height = this.getPath("parentView.layout.height");
+        var height = this.get('parentView.layout.height');
         if (height > 0) {
             var paddingAndBorders = 5 + 5 + 1 + 1;  // XXX obtain paddings & borders from MenuView?
-            this.set("layout", {height: height - paddingAndBorders, width: "100%"});
-            var viewPort = this.get("viewPort");
+            this.set('layout', { height: height - paddingAndBorders, width: '100%' });
+            var viewPort = this.get('viewPort');
             if (viewPort) {
-                viewPort.set("layout", {
+                viewPort.set('layout', {
                     height: height - paddingAndBorders,
                     top: 0,
-                    width: "100%"
+                    width: '100%'
                 });
             }
         }
-    }.observes("parentView.layout.height", "needScrolling"),
+    }.observes('parentView.layout', 'needScrolling'),
 
     _scrollTo: function(position, scrollTime) {
-        var viewPort = this.get("viewPort").$();
+        var viewPort = this.get('viewPort').$();
         viewPort.scrollTop(position);
     },
 
     scroll: function() {
-        var scrollDirection = this.get("scrollDirection");
+        var scrollDirection = this.get('scrollDirection');
         var scrollTime = 20;
-        var scrollSize = this.get("scrollSize");
-        var viewPort = this.get("viewPort").$();
+        var scrollSize = this.get('scrollSize');
+        var viewPort = this.get('viewPort').$();
         var oldTop = viewPort.scrollTop();
         var viewPortHeight = viewPort.height();
         var continueScrolling = true;
-        var scrollPosition = this.get("scrollPosition");
+        var scrollPosition = this.get('scrollPosition');
 
         var delta = scrollSize;
         if (scrollDirection === -1) {
@@ -3004,7 +3139,7 @@ Flame.MenuScrollView = Flame.View.extend({
                 continueScrolling = false;
             }
         } else if (scrollDirection === 1) {
-            var listHeight = this.getPath("viewPort.childViews.firstObject").$().outerHeight();
+            var listHeight = this.get('viewPort.firstObject').$().outerHeight();
             var shownBottom = oldTop + viewPortHeight;
             if (shownBottom + delta >= listHeight) {
                 delta = listHeight - shownBottom;
@@ -3016,18 +3151,23 @@ Flame.MenuScrollView = Flame.View.extend({
 
         if (!continueScrolling) {
             if (scrollDirection === 1) {
-                scrollPosition = "bottom";
+                scrollPosition = 'bottom';
             } else if (scrollDirection === -1) {
-                scrollPosition = "top";
+                scrollPosition = 'top';
             }
             this.stopScrolling();
         } else {
             this._timer = Ember.run.later(this, this.scroll, scrollTime);
-            scrollPosition = "middle";
+            scrollPosition = 'middle';
         }
-        this.set("scrollPosition", scrollPosition);
+        this.set('scrollPosition', scrollPosition);
     }
 });
+
+})();
+(function() {
+'use strict';
+
 
 
 
@@ -3035,47 +3175,50 @@ Flame.MenuScrollView = Flame.View.extend({
 
 // Only to be used in Flame.MenuView. Represent menu items with normal JS objects as creation of one Ember object took
 // 3.5 ms on fast IE8 machine.
-Flame.MenuItem = function(opts) {
-    var key;
-    for (key in opts) {
+Flame.MenuItem = function MenuItem(opts) {
+    for (var key in opts) {
         if (opts.hasOwnProperty(key)) {
             this[key] = opts[key];
         }
     }
+};
 
-    this.renderToElement = function () {
-        var classes = ["flame-view", "flame-list-item-view", "flame-menu-item-view"];
-        if (this.isSelected) { classes.push("is-selected"); }
-        if (this.isChecked) { classes.push("is-checked"); }
-        var subMenuLength = Ember.none(this.subMenuItems) ? -1 : this.subMenuItems.get('length');
-        var menuIndicatorClasses = ["menu-indicator"];
-        if (!this.isEnabled()) {
-            classes.push("is-disabled");
-        } else if (subMenuLength > 0) {
-            menuIndicatorClasses.push("is-enabled");
-        }
-        var title = Handlebars.Utils.escapeExpression(this.title);
-        var template = "<div id='%@' class='%@'><div class='title'>%@</div><div class='%@'></div></div>";
-        var div = template.fmt(this.id, classes.join(" "), title, menuIndicatorClasses.join(" "));
-        return div;
-    };
+Flame.MenuItem.prototype.renderToBuffer = function(buffer) {
+    var classes = ['flame-view', 'flame-list-item-view', 'flame-menu-item-view'];
+    if (this.isSelected) classes.push('is-selected');
+    if (!this.isEnabled()) classes.push('is-disabled');
+    var subMenuLength = Ember.isNone(this.subMenuItems) ? -1 : this.subMenuItems.get('length');
+    var template = '<div id="%@" class="%@" %@>%@%@%@</div>';
+    buffer.push(
+        template.fmt(
+            this.id,
+            classes.join(' '),
+            this.item.tooltip ? 'title="%@"'.fmt(this.item.tooltip) : '',
+            this.isChecked ? '<div class="flame-menu-item-view-checkmark"></div>' : '',
+            Handlebars.Utils.escapeExpression(this.title),
+            subMenuLength > 0 ? '<div class="menu-indicator"></div>' : ''
+        )
+    );
+};
 
-    this.isEnabled = function() {
-        return !(this.isDisabled || (this.subMenuItems && this.subMenuItems.length === 0));
-    };
-    this.isSelectable = function() {
-        return this.isEnabled() && !this.subMenuItems;
-    };
-    this.elementSelector = function() {
-        return Ember.$("#%@".fmt(this.id));
-    };
-    this.closeSubMenu = function() {
-        var subMenu = this.subMenuView;
-        if (!Ember.none(subMenu)) {
-            subMenu.close();
-            this.subMenuView = null;
-        }
-    };
+Flame.MenuItem.prototype.isEnabled = function() {
+    return !(this.isDisabled || (this.subMenuItems && this.subMenuItems.length === 0));
+};
+
+Flame.MenuItem.prototype.isSelectable = function() {
+    return this.isEnabled() && !this.subMenuItems;
+};
+
+Flame.MenuItem.prototype.$ = function() {
+    return Ember.$('#%@'.fmt(this.id));
+};
+
+Flame.MenuItem.prototype.closeSubMenu = function() {
+    var subMenu = this.subMenuView;
+    if (!Ember.isNone(subMenu)) {
+        subMenu.close();
+        this.subMenuView = null;
+    }
 };
 
 /**
@@ -3084,20 +3227,24 @@ Flame.MenuItem = function(opts) {
   MenuView has a property 'subMenuKey'. Should objects based on which the menu is created return null/undefined for
   that property, the item itself will be selectable. Otherwise if the property has more than zero values, a submenu
   will be shown.
+
+  Because of the implementation details, this menu will hold values of undefined or null as the same as not set. Thus,
+  no selectable menu item must have such value their value.
 */
 Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
     classNames: ['flame-menu'],
     childViews: ['contentView'],
     contentView: Flame.MenuScrollView,
     dimBackground: false,
+    allowClosingByCancelButton: true,
     subMenuKey: 'subMenu',
-    itemTitleKey: "title",
+    itemTitleKey: 'title',
     /* Attribute that can be used to indicate a disabled menu item. The item will be disabled only if
      * isEnabled === false, not some falseish value. */
-    itemEnabledKey: "isEnabled",
-    itemCheckedKey: "isChecked",
-    itemValueKey: "value",
-    itemActionKey: "action",
+    itemEnabledKey: 'isEnabled',
+    itemCheckedKey: 'isChecked',
+    itemValueKey: 'value',
+    itemActionKey: 'action',
     itemHeight: 21,
     /* Margin between the menu and top/bottom of the viewport. */
     menuMargin: 12,
@@ -3108,12 +3255,13 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
     _allItemsDoNotFit: true,
     _anchorElement: null,
     _menuItems: null,
-    highlightIndex: -1, // Currently highlighted index.
-    userHighlightIndex: -1, // User selected highlighted index
+    _highlightIndex: -1, // Currently highlighted index.
+    _userHighlightIndex: -1, // User selected highlighted index
     // Reflects the content item in this menu or the deepest currently open submenu that is currently highlighted,
     // regardless of whether mouse button is up or down. When mouse button is released, this will be set as the real
     // selection on the top-most menu, unless it's undefined (happens if currently on a non-selectable item)
-    internalSelection: undefined,
+    // This is to be handled as a unmodifiable object: always create a new object instead of mutating its properties.
+    _internalSelection: { isSet: false, value: null },
 
     init: function() {
         this._super();
@@ -3121,33 +3269,31 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
     },
 
     _calculateMenuWidth: function() {
-        var items = this.get("items") || [];
+        var items = this.get('items') || [];
         if (Ember.get(items, 'length') === 0) {
             return;
         }
-        var itemTitleKey = this.get("itemTitleKey");
-        var allTitles = items.reduce(function(currentTitles, item) {
-            var nextTitle = Ember.get(item, itemTitleKey);
-            return currentTitles + nextTitle + '<br/>';
-        }, '');
-        // Give the menus a 16px breathing space to account for sub menu indicator, and to give some right margin
-        return Flame.measureString(allTitles, 'ember-view flame-view flame-list-item-view flame-menu-item-view', 'title').width + 16;
+        var itemTitleKey = this.get('itemTitleKey');
+        var allTitles = items.map(function(item) { return Ember.get(item, itemTitleKey); });
+        // Give the menus a 16px breathing space to account for sub menu indicator, and to give some right margin (+18px for the padding)
+        return Flame.measureString(allTitles, 'ember-view flame-view flame-list-item-view flame-menu-item-view', 'title').width + 16 + 18;
     },
 
     _createMenuItems: function() {
-        var items = this.get("items"),
-            itemCheckedKey = this.get("itemCheckedKey"),
-            itemEnabledKey = this.get("itemEnabledKey"),
-            itemTitleKey = this.get("itemTitleKey"),
-            itemValueKey = this.get("itemValueKey"),
-            subMenuKey = this.get("subMenuKey"),
-            selectedValue = this.get("value"),
+        var items = this.get('items'),
+            itemCheckedKey = this.get('itemCheckedKey'),
+            itemEnabledKey = this.get('itemEnabledKey'),
+            itemTitleKey = this.get('itemTitleKey'),
+            itemValueKey = this.get('itemValueKey'),
+            subMenuKey = this.get('subMenuKey'),
+            selectedValue = this.get('value'),
+            valueIsSet = !Ember.isNone(selectedValue),
             menuItems;
         menuItems = (items || []).map(function(item, i) {
-            //Only show the selection on the main menu, not in the submenus.
+            // Only show the selection on the main menu, not in the submenus.
             return new Flame.MenuItem({
                 item: item,
-                isSelected: Ember.get(item, itemValueKey) === selectedValue,
+                isSelected: valueIsSet ? Ember.get(item, itemValueKey) === selectedValue : false,
                 isDisabled: Ember.get(item, itemEnabledKey) === false,
                 isChecked: Ember.get(item, itemCheckedKey),
                 subMenuItems: Ember.get(item, subMenuKey),
@@ -3160,70 +3306,96 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
 
     _needToRecreateItems: function() {
         var menuItems = this._createMenuItems();
-        this.set("_menuItems", menuItems);
-        if (Ember.none(this.get("parentMenu"))) {
+        this.set('_menuItems', menuItems);
+        if (Ember.isNone(this.get('parentMenu'))) {
             menuItems.forEach(function(item, i) {
-                if (item.isSelected) { this.set("highlightIndex", i); }
+                if (item.isSelected) this.set('_highlightIndex', i);
             }, this);
         }
-        this.getPath("contentView").setScrolledView(this._createMenuView());
-        if (this.get("_anchorElement")) {
+        this.get('contentView').setScrolledView(this._createMenuView());
+        if (this.get('_anchorElement')) {
             this._updateMenuSize();
         }
 
-        //Set content of scroll stuff
-        //calculate the the height of menu
-    }.observes("items", "elementId"),
+        // Set content of scroll stuff
+        // calculate the the height of menu
+    }.observes('items'),
 
     _createMenuView: function() {
-        var items = this.get("_menuItems");
+        var items = this.get('_menuItems');
         return Flame.View.create({
-            useAbsolutePosition:false,
-            render: function(renderingBuffer) {
-                // Push strings to rendering buffer with one pushObjects call so we don't get one arrayWill/DidChange
-                // per menu item.
-                var tempArr = items.map(function(menuItem) { return menuItem.renderToElement(); });
-                renderingBuffer.push(tempArr.join(''));
+            useAbsolutePosition: false,
+            render: function(buffer) {
+                items.forEach(function(menuItem) { menuItem.renderToBuffer(buffer); });
             }
         });
     },
 
     makeSelection: function() {
-        var parentMenu = this.get("parentMenu");
+        var parentMenu = this.get('parentMenu');
         var action, value;
-        if (!Ember.none(parentMenu)) {
+        if (!Ember.isNone(parentMenu)) {
             parentMenu.makeSelection();
             this.close();
         } else {
-            var internalSelection = this.get('internalSelection');
-            if (typeof internalSelection !== "undefined") {
-                value = Ember.get(internalSelection, this.get("itemValueKey"));
+            var internalSelection = this.get('_internalSelection');
+            if (internalSelection.isSet) {
+                value = Ember.get(internalSelection.value, this.get('itemValueKey'));
                 this.set("value", value);
-                //If we have an action, call it on the selection.
-                action = Ember.get(internalSelection, this.get("itemActionKey")) || this.get('action');
+                // If we have an action, call it on the selection.
+                action = Ember.get(internalSelection.value, this.get('itemActionKey')) || this.get('action');
             }
-            //Sync the values before we tear down all bindings in close() which calls destroy().
+            // Sync the values before we tear down all bindings in close() which calls destroy().
             Ember.run.sync();
             // Close this menu before firing an action - the action might open a new popup, and if closing after that,
             // the new popup panel is popped off the key responder stack instead of this menu.
             this.close();
-            if (!Ember.none(action)) {
+            if (!Ember.isNone(action)) {
                 this.fireAction(action, value);
             }
         }
     },
 
-    //This function is here to break the dependency between MenuView and MenuItemView
+    subMenu: function() {
+        return Flame.MenuView.extend({
+            isModal: false,
+
+            popup: function(anchor, position) {
+                if (!this.get('layout.width')) {
+                    // We already need to know the width of the menu at this point so that Panel#popup
+                    // can correctly position it.
+                    var menuWidth = Math.max(this.get('minWidth') || 0, this._calculateMenuWidth());
+                    this.set('layout.width', menuWidth);
+                }
+                this._super(anchor, position);
+            },
+
+            _layoutRelativeTo: function(anchor, position) {
+                var layout = this._super(anchor, position);
+                // If already positioned on the left, nothing else needs to be checked.
+                if (this.get('subMenuPosition') === Flame.POSITION_LEFT) return layout;
+
+                if (layout.movedX) {
+                    // Any further opened submenu should be opened on the left side.
+                    this.set('subMenuPosition', Flame.POSITION_LEFT);
+                    layout = this._super(anchor, Flame.POSITION_LEFT);
+                }
+                return layout;
+            }
+        });
+    }.property(),
+
+    // This function is here to break the dependency between MenuView and MenuItemView
     createSubMenu: function(subMenuItems) {
-        return Flame.MenuView.create({
+        return this.get('subMenu').create({
             items: subMenuItems,
             parentMenu: this,
-            subMenuKey: this.get("subMenuKey"),
-            itemEnabledKey: this.get("itemEnabledKey"),
-            itemTitleKey: this.get("itemTitleKey"),
-            itemValueKey: this.get("itemValueKey"),
-            itemHeight: this.get("itemHeight"),
-            isModal: false
+            subMenuKey: this.get('subMenuKey'),
+            itemEnabledKey: this.get('itemEnabledKey'),
+            itemTitleKey: this.get('itemTitleKey'),
+            itemValueKey: this.get('itemValueKey'),
+            itemHeight: this.get('itemHeight'),
+            subMenuPosition: this.get('subMenuPosition')
         });
     },
 
@@ -3232,75 +3404,81 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
         // this menu. Close() sets highlightIndex to -1, _highlightWillChange() will call closeSubMenu() on the item
         // which then calls close() on the menu it depicts and this is continued until no open menus remain under the
         // closed menu.
-        var index = this.get("highlightIndex");
+        var index = this.get('_highlightIndex');
         if (index >= 0) {
-            this.get("_menuItems").objectAt(index).closeSubMenu();
+            this.get('_menuItems').objectAt(index).closeSubMenu();
         }
     },
 
     popup: function(anchorElementOrJQ, position) {
-        if (Ember.none(this.get('parentMenu'))) {
+        if (Ember.isNone(this.get('parentMenu'))) {
             this._openedAt = new Date().getTime();
         }
         var anchorElement = anchorElementOrJQ instanceof jQuery ? anchorElementOrJQ : anchorElementOrJQ.$();
         this._super(anchorElement, position);
-        this.set("_anchorElement", anchorElement);
+        this.set('_anchorElement', anchorElement);
         this._updateMenuSize();
     },
 
     _updateMenuSize: function() {
-        var anchorElement = this.get("_anchorElement");
-        //These values come from the CSS but we still need to know them here. Is there a better way?
+        var anchorElement = this.get('_anchorElement');
+        // These values come from the CSS but we still need to know them here. Is there a better way?
         var paddingTop = 5;
         var paddingBottom = 5;
         var borderWidth = 1;
         var totalPadding = paddingTop + paddingBottom;
-        var margin = this.get("menuMargin");
-        var menuOuterHeight = this.get("_menuItems").get("length") * this.get("itemHeight") + totalPadding + 2 * borderWidth;
+        var margin = this.get('menuMargin');
+        var menuOuterHeight = this.get('_menuItems').get('length') * this.get('itemHeight') + totalPadding + 2 * borderWidth;
         var wh = $(window).height();
         var anchorTop = anchorElement.offset().top;
         var anchorHeight = anchorElement.outerHeight();
-        var layout = this.get("layout");
+        var layout = this.get('layout');
 
-        var isSubMenu = !Ember.none(this.get("parentMenu"));
+        var isSubMenu = !Ember.isNone(this.get('parentMenu'));
         var spaceDownwards = wh - anchorTop + (isSubMenu ? (borderWidth + paddingTop) : (-anchorHeight));
         var needScrolling = false;
 
         if (menuOuterHeight + margin * 2 <= wh) {
             if (isSubMenu && spaceDownwards >= menuOuterHeight + margin) {
-                layout.set("top", anchorTop - (borderWidth + paddingTop));
+                layout.set('top', anchorTop - (borderWidth + paddingTop));
             } else if (spaceDownwards < menuOuterHeight + margin) {
-                layout.set("top", wh - (menuOuterHeight + margin));
+                layout.set('top', wh - (menuOuterHeight + margin));
             }
         } else {
             // Constrain menu height
             menuOuterHeight = wh - 2 * margin;
-            layout.set("top", margin);
+            layout.set('top', margin);
             needScrolling = true;
         }
-        layout.set("height", menuOuterHeight);
+        layout.set('height', menuOuterHeight);
         if (!layout.width) {
             var menuWidth = Math.max(this.get('minWidth') || 0, this._calculateMenuWidth());
-            layout.set("width", menuWidth);
+            layout.set('width', menuWidth);
         }
-        this.set("layout", layout);
-        this.get("contentView").set("needScrolling", needScrolling);
+        this.notifyPropertyChange('layout');
+        this.set('contentView.needScrolling', needScrolling);
     },
 
     close: function() {
         if (this.isDestroyed) { return; }
-        this.set("highlightIndex", -1);
+        this.set('_highlightIndex', -1);
         this._clearKeySearch();
         this._super();
     },
 
     /* event handling starts */
-    mouseDown: function () {
+    mouseDown: function() {
         return true;
     },
 
     cancel: function() {
-        this.close();
+        var parentMenu = this.get('parentMenu');
+        if (!Ember.isNone(parentMenu)) {
+            parentMenu.closeCurrentlyOpenSubMenu();
+            return true;
+        } else {
+            return this._super();
+        }
     },
 
     moveUp: function() { return this._selectNext(-1); },
@@ -3312,8 +3490,8 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
     },
 
     moveLeft: function() {
-        var parentMenu = this.get("parentMenu");
-        if (!Ember.none(parentMenu)) { parentMenu.closeCurrentlyOpenSubMenu(); }
+        var parentMenu = this.get('parentMenu');
+        if (!Ember.isNone(parentMenu)) parentMenu.closeCurrentlyOpenSubMenu();
         return true;
     },
 
@@ -3324,24 +3502,24 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
 
     keyPress: function(event) {
         var key = String.fromCharCode(event.which);
-        if (event.which > 31 && key !== "") { //Skip control characters.
+        if (event.which > 31 && key !== '') { // Skip control characters.
             this._doKeySearch(key);
             return true;
         }
         return false;
     },
 
-    handleMouseEvents: function (event) {
+    handleMouseEvents: function(event) {
         // This should probably be combined with our event handling in event_manager.
         var itemIndex = this._idToIndex(event.currentTarget.id);
         // jQuery event handling: false bubbles the stuff up.
         var retVal = false;
 
-        if (event.type === "mouseenter") {
+        if (event.type === 'mouseenter') {
             retVal = this.mouseEntered(itemIndex);
-        } else if (event.type === "mouseup") {
+        } else if (event.type === 'mouseup') {
             retVal = this.mouseClicked(itemIndex);
-        } else if (event.type === "mousedown") {
+        } else if (event.type === 'mousedown') {
             retVal = true;
         }
         return !retVal;
@@ -3352,34 +3530,34 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
     mouseClicked: function(index) {
         // If we're just handling a mouseUp that is part of the click that opened this menu, do nothing.
         // When the mouseUp follows within 100ms of opening the menu, we know that's the case.
-        if (Ember.none(this.get('parentMenu')) && new Date().getTime() - this._openedAt < 100) {
+        if (Ember.isNone(this.get('parentMenu')) && new Date().getTime() - this._openedAt < 300) {
             return;
         }
 
-        this.set("highlightIndex", index);
+        this.set('_highlightIndex', index);
         // This will currently select the item even if we're not on the the current menu. Will need to figure out how
         // to deselect an item when cursor leaves the menu totally (that is, does not move to a sub-menu).
-        if (this.get('userHighlightIndex') >= 0) {
+        if (this.get('_userHighlightIndex') >= 0) {
             this.makeSelection();
         }
         return true;
     },
 
     mouseEntered: function(index) {
-        this.set("userHighlightIndex", index);
+        this.set('_userHighlightIndex', index);
         this._tryOpenSubmenu(false);
         return true;
     },
 
     _selectNext: function(increment) {
-        var menuItems = this.get("_menuItems");
-        var len = menuItems.get("length");
+        var menuItems = this.get('_menuItems');
+        var len = menuItems.get('length');
         var item;
-        var index = this.get("highlightIndex") + increment;
+        var index = this.get('_highlightIndex') + increment;
         for (; index >= 0 && index < len; index += increment) {
             item = menuItems.objectAt(index);
             if (item.isEnabled()) {
-                this.set("highlightIndex", index);
+                this.set('_highlightIndex', index);
                 break;
             }
         }
@@ -3388,27 +3566,27 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
     },
 
     _valueDidChange: function() {
-        var value = this.get("value");
-        var valueKey = this.get("itemValueKey");
-        if (!Ember.none(value) && !Ember.none(valueKey)) {
+        var value = this.get('value');
+        var valueKey = this.get('itemValueKey');
+        if (!Ember.isNone(value) && !Ember.isNone(valueKey)) {
             var index = this._findIndex(function(item) {
                 return Ember.get(item, valueKey) === value;
             });
             if (index >= 0) {
-                this.set("highlightIndex", index);
+                this.set('_highlightIndex', index);
             }
         }
-    }.observes("value"),
+    }.observes('value'),
 
     // Propagate internal selection to possible parent
     _internalSelectionDidChange: function() {
-        var selected = this.get('internalSelection');
-        Ember.trySetPath(this, "parentMenu.internalSelection", selected);
-    }.observes('internalSelection'),
+        var selected = this.get('_internalSelection');
+        Ember.trySet(this, 'parentMenu._internalSelection', selected);
+    }.observes('_internalSelection'),
 
     _findIndex: function(identityFunc) {
-        var menuItems = this.get("items");
-        var i = 0, len = menuItems.get("length");
+        var menuItems = this.get('items');
+        var i = 0, len = menuItems.get('length');
         for (; i < len; i++) {
             if (identityFunc(menuItems.objectAt(i))) {
                 return i;
@@ -3418,42 +3596,41 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
     },
 
     _findByName: function(name) {
-        var re = new RegExp("^" + name, "i");
-        var titleKey = this.get("itemTitleKey");
+        var re = new RegExp('^' + name.replace(/[\^$*+?.(){}\[\]|]/g, "\\$&"), 'i');
+        var titleKey = this.get('itemTitleKey');
         return this._findIndex(function(menuItem) {
             return re.test(Ember.get(menuItem, titleKey));
         });
     },
 
     _toggleClass: function(className, index, addOrRemove) {
-        var menuItem = this.get("_menuItems").objectAt(index);
-        menuItem.elementSelector().toggleClass(className, addOrRemove);
+        var menuItem = this.get('_menuItems').objectAt(index);
+        menuItem.$().toggleClass(className, addOrRemove);
     },
 
     _highlightWillChange: function() {
-        var index = this.get("highlightIndex");
-        var lastItem = this.get("_menuItems").objectAt(index);
-        if (!Ember.none(lastItem)) {
-            this._toggleClass("is-selected", index);
+        var index = this.get('_highlightIndex');
+        var lastItem = this.get('_menuItems').objectAt(index);
+        if (!Ember.isNone(lastItem)) {
+            this._toggleClass('is-selected', index);
             lastItem.isSelected = false;
             lastItem.closeSubMenu();
         }
-    }.observesBefore("highlightIndex"),
+    }.observesBefore('_highlightIndex'),
 
     _highlightDidChange: function() {
-        var index = this.get("highlightIndex");
-        var newItem = this.get("_menuItems").objectAt(index);
-        var internalSelection;
-        if (!Ember.none(newItem)) {
-            this._toggleClass("is-selected", index);
+        var index = this.get('_highlightIndex');
+        var newItem = this.get('_menuItems').objectAt(index);
+        var internalSelection = { isSet: false, value: null };
+        if (!Ember.isNone(newItem)) {
+            this._toggleClass('is-selected', index);
             newItem.isSelected = true;
             if (newItem.isSelectable()) {
-                internalSelection = newItem.item;
+                internalSelection = { isSet: true, value: newItem.item };
             }
         }
-        this.set('internalSelection', internalSelection);
-
-    }.observes("highlightIndex"),
+        this.set('_internalSelection', internalSelection);
+    }.observes('_highlightIndex'),
 
     /**
       We only want to allow selecting menu items after the user has moved the mouse. We update
@@ -3464,55 +3641,55 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
       would be triggered on a menu item, and this would cause the menu to close immediately.
     */
     _userHighlightIndexDidChange: function() {
-        this.set('highlightIndex', this.get('userHighlightIndex'));
-    }.observes("userHighlightIndex"),
+        this.set('_highlightIndex', this.get('_userHighlightIndex'));
+    }.observes('_userHighlightIndex'),
 
     _clearKeySearch: function() {
-        if (!Ember.none(this._timer)) {
+        if (!Ember.isNone(this._timer)) {
             Ember.run.cancel(this._timer);
         }
-        this._searchKey = "";
+        this._searchKey = '';
     },
 
     _doKeySearch: function(key) {
-        this._searchKey = (this._searchKey || "") + key;
+        this._searchKey = (this._searchKey || '') + key;
         var index = this._findByName(this._searchKey);
         if (index >= 0) {
-            this.set("highlightIndex", index);
+            this.set('_highlightIndex', index);
         }
 
-        if (!Ember.none(this._timer)) {
+        if (!Ember.isNone(this._timer)) {
             Ember.run.cancel(this._timer);
         }
         this._timer = Ember.run.later(this, this._clearKeySearch, 1000);
     },
 
     _indexToId: function(index) {
-        return "%@-%@".fmt(this.get("elementId"), index);
+        return "%@-%@".fmt(this.get('elementId'), index);
     },
 
     _idToIndex: function(id) {
-        var re = new RegExp("%@-(\\d+)".fmt(this.get("elementId")));
+        var re = new RegExp("%@-(\\d+)".fmt(this.get('elementId')));
         var res = re.exec(id);
         return res && res.length === 2 ? parseInt(res[1], 10) : -1;
     },
 
-    _tryOpenSubmenu: function (selectItem) {
-        var index = this.get("highlightIndex");
-        var item = this.get("_menuItems").objectAt(index);
+    _tryOpenSubmenu: function(selectItem) {
+        var index = this.get('_highlightIndex');
+        var item = this.get('_menuItems').objectAt(index);
         if (!item) {
             return false;
         }
         var subMenuItems = item.subMenuItems;
-        if (!Ember.none(subMenuItems) && item.isEnabled() && subMenuItems.get("length") > 0) {
+        if (!Ember.isNone(subMenuItems) && item.isEnabled() && subMenuItems.get('length') > 0) {
             this._clearKeySearch();
             var subMenu = item.subMenuView;
-            if (Ember.none(subMenu)) {
+            if (Ember.isNone(subMenu)) {
                 subMenu = this.createSubMenu(subMenuItems);
                 item.subMenuView = subMenu;
             }
-            subMenu.popup(item.elementSelector(), Flame.POSITION_RIGHT);
-            if (selectItem) { subMenu._selectNext(1); }
+            subMenu.popup(item.$(), this.get('subMenuPosition') || Flame.POSITION_RIGHT);
+            if (selectItem) subMenu._selectNext(1);
             return true;
         }
         return false;
@@ -3521,16 +3698,29 @@ Flame.MenuView = Flame.Panel.extend(Flame.ActionSupport, {
     didInsertElement: function() {
         this._super();
         var self = this;
-        var id = this.get("elementId");
-        var events = "mouseenter.%@ mouseup.%@ mousedown.%@".fmt(id, id, id);
-        Ember.$("#%@".fmt(id)).on(events, ".flame-menu-item-view", function(event) {
+        this.$().on('mouseenter mouseup mousedown', '.flame-menu-item-view', function(event) {
             return self.handleMouseEvents(event);
         });
+    },
+
+    willDestroyElement: function() {
+        this._super();
+        this.$().off('mouseenter mouseup mousedown');
     }
 });
+
+})();
+(function() {
+'use strict';
+
+
 Flame.AutocompleteMenuView = Flame.MenuView.extend({
     keyPress: function(event) {
         return false;
+    },
+    deleteBackward: function() {
+        // Prevent backspace doing native action (go back in history in Chrome) if user is midst of selecting items
+        return this.get('highlightIndex') >= 0;
     },
     insertTab: function() {
         this.close();
@@ -3556,113 +3746,82 @@ Flame.AutocompleteMenuView = Flame.MenuView.extend({
     }
 });
 
+})();
+(function() {
+'use strict';
 
-// A checkbox. The state of the checkbox is indicated by the isSelected property (in SC1.x it was value).
-Flame.CheckboxView = Flame.ButtonView.extend({
-    classNames: ['flame-checkbox-view'],
-    isSticky: true,
-    //Overwrite the parent handlebars as we're using render all the way!
-    handlebars: null,
+var alias = Ember.computed.alias,
+    trueFalse = Flame.computed.trueFalse,
+    equal = Ember.computed.equal;
 
-    render: function(context) {
-        this._super(context);
-        context.push("<div class='flame-checkbox-box'></div>");
-        this.renderCheckMark(context);
-        var title = Ember.none(this.get("title")) ? "" : this.get("title");
-        context.push("<label class='flame-checkbox-label'>" + title + "</label>");
+Flame.TextField = Ember.TextField.extend(Flame.EventManager, Flame.FocusSupport, {
+    classNameBindings: ['isInvalid', 'isEditableLabel', 'isFocused'],
+    acceptsKeyResponder: true,
+    type: trueFalse('parentView.isPassword', 'password', 'text'),
+    isInvalid: equal('parentView.isValid', false),
+    value: alias('parentView.value'),
+    placeholder: alias('parentView.placeholder'),
+    isEditableLabel: alias('parentView.isEditableLabel'),
+    isVisible: alias('parentView.isVisible'),
+    disabled: alias('parentView.isDisabled'),
+    name: alias('parentView.name'),
+    attributeBindings: ['name', 'disabled'],
+    _setValueDelay: 700,
+    _timer: null,
+
+    init: function() {
+        this._super();
+        // This would normally call `interpretKeyEvents`, but Flame.EventManager
+        // already does this on `keyDown`.
+        this.off('keyUp');
+        this.off('input');
+        this.on('input', this, this._setValue);
     },
 
-    renderCheckMark: function(context) {
-        var imgUrl = Flame.image('checkmark.png');
-        context.push("<div class='flame-view flame-checkbox-checkmark' style='left:6px; top:-2px;'><img src='"+ imgUrl + "'></div>");
-    }
-});
-Flame.SelectButtonView = Flame.ButtonView.extend({
-    classNames: ['flame-select-button-view'],
-    items: [],
-    value: undefined,
-    defaultHeight: 22,
-    itemTitleKey: 'title',
-    itemValueKey: 'value',
-    itemActionKey: 'action',
-    subMenuKey: "subMenu",
-
-    handlebars: function() {
-        var itemTitleKey = this.get('itemTitleKey');
-        return '<label {{bindAttr title="_selectedMenuItem.%@"}}>{{_selectedMenuItem.%@}}</label><div><img src="%@"></div>'.fmt(itemTitleKey, itemTitleKey, Flame.image('select_button_arrow.png'));
-    }.property("value", "_selectedMenuItem").cacheable(),
-
-    _selectedMenuItem: function() {
-        if (this.get('value') === undefined) { return undefined; }
-        var selectedItem = this._findItem();
-        return selectedItem;
-    }.property("value", "itemValueKey", "subMenuKey", "items").cacheable(),
-
-    itemsDidChange: function() {
-        if (this.get('items') && this.getPath('items.length') > 0 && !this._findItem()) {
-            this.set('value', this.getPath('items.firstObject.%@'.fmt(this.get('itemValueKey'))));
+    willDestroyElement: function() {
+        if (this._timer) {
+            Ember.run.cancel(this._timer);
+            this._elementValueDidChange();
         }
-    }.observes('items'),
-
-    _findItem: function(itemList) {
-        if (!itemList) itemList = this.get('items');
-        var itemValueKey = this.get('itemValueKey'),
-            value = this.get('value'),
-            subMenuKey = this.get('subMenuKey'),
-            foundItem;
-        if (Ember.none(itemList)) { return foundItem; }
-        itemList.forEach(function(item) {
-            if (Ember.get(item, subMenuKey)) {
-                var possiblyFound = this._findItem(Ember.get(item, subMenuKey));
-                if (!Ember.none(possiblyFound)) { foundItem = possiblyFound; }
-            } else if (Ember.get(item, itemValueKey) === value) {
-                foundItem = item;
-            }
-        }, this);
-        return foundItem;
     },
 
-    menu: function() {
-        // This has to be created dynamically to set the selectButtonView reference (parentView does not work
-        // because a menu is added on the top level of the view hierarchy, not as a children of this view)
-        var self = this;
-        return Flame.MenuView.extend({
-            selectButtonView: this,
-            itemTitleKey: this.get('itemTitleKey'),
-            itemValueKey: this.get('itemValueKey'),
-            itemActionKey: this.get('itemActionKey'),
-            subMenuKey: this.get('subMenuKey'),
-            itemsBinding: 'selectButtonView.items',
-            valueBinding: 'selectButtonView.value',
-            minWidth: this.getPath('layout.width') || this.$().width(),
-            close: function() {
-                self.gotoState('idle');
-                this._super();
-            }
-        });
-    }.property(),
-
-    mouseDown: function() {
-        if (!this.get('isDisabled')) this._openMenu();
-        return true;
+    _setValue: function() {
+        if (this.get('parentView.setValueOnEachKeyUp')) {
+            this._elementValueDidChange();
+        } else {
+            if (this._timer) Ember.run.cancel(this._timer);
+            this._timer = Ember.run.later(this, function() {
+                this._elementValueDidChange();
+            }, this._setValueDelay);
+        }
     },
 
-    insertSpace: function() {
-        this._openMenu();
-        return true;
+    // Trigger a value change notification also when inserting a new line. Otherwise the action could be fired
+    // before the changed value is propagated to this.value property.
+    insertNewline: function() {
+        this._elementValueDidChange();
+        Ember.run.sync();
+        return false;
     },
 
-    _openMenu: function() {
-        this.gotoState('mouseDownInside');
-        this.get('menu').create().popup(this);
-    }
+    cancel: function() { return false; },
+
+    // The problem here is that we need browser's default handling for these events to make the input field
+    // work. If we had no handlers here and no parent/ancestor view has a handler returning true, it would
+    // all work. But if any ancestor had a handler returning true, the input field would break, because
+    // true return value signals jQuery to cancel browser's default handling. It cannot be remedied by
+    // returning true here, because that has the same effect, thus we need a special return value (which
+    // Flame.EventManager handles specially by stopping the parent propagation).
+    mouseDown: function() { return Flame.ALLOW_BROWSER_DEFAULT_HANDLING; },
+    mouseMove: function() { return Flame.ALLOW_BROWSER_DEFAULT_HANDLING; },
+    mouseUp: function() { return Flame.ALLOW_BROWSER_DEFAULT_HANDLING; }
 });
+
 /**
   The actual text field is wrapped in another view since browsers like Firefox
   and IE don't support setting the `right` CSS property (used by LayoutSupport)
   on input fields.
- */
-
+*/
 Flame.TextFieldView = Flame.View.extend(Flame.ActionSupport, {
     classNames: ['flame-text'],
     childViews: ['textField'],
@@ -3679,9 +3838,13 @@ Flame.TextFieldView = Flame.View.extend(Flame.ActionSupport, {
     isEditableLabel: false,
     isVisible: true,
     isDisabled: false,
-    isAutocomplete: false,
-    autocompleteDelegate: null,
     name: null,
+    /**
+      It might be that setting the value is very costly. In that case, instead of
+      setting the value on each key up, when `setValueOnEachKeyUp` is set to false
+      the value is only set after typing has stopped for the value set in `_setValueDelay`.
+    */
+    setValueOnEachKeyUp: true,
 
     becomeKeyResponder: function() {
         this.get('textField').becomeKeyResponder();
@@ -3691,116 +3854,248 @@ Flame.TextFieldView = Flame.View.extend(Flame.ActionSupport, {
         return this.fireAction();
     },
 
-    textField: Ember.TextField.extend(Flame.EventManager, Flame.FocusSupport, {
-        classNameBindings: ['isInvalid', 'isEditableLabel', 'isFocused'],
-        acceptsKeyResponder: true,
-        type: Flame.computed.trueFalse('parentView.isPassword', 'password', 'text'),
-        isInvalid: Flame.computed.equals('parentView.isValid', false),
-        valueBinding: '^value',
-        placeholderBinding: '^placeholder',
-        isEditableLabelBinding: '^isEditableLabel',
-        isVisibleBinding: '^isVisible',
-        disabledBinding: '^isDisabled',
-        isAutocompleteBinding: '^isAutocomplete',
-        attributeBindings: ['name', 'disabled'],
-        nameBinding: "^name",
+    textField: Flame.TextField
+});
 
-        // Ember.TextSupport (which is mixed in by Ember.TextField) calls interpretKeyEvents on keyUp.
-        // Since the event manager already calls interpretKeyEvents on keyDown, the action would be fired
-        // twice, both on keyDown and keyUp. So we override the keyUp method and only record the value change.
+})();
+(function() {
+'use strict';
+
+
+Flame.AutocompleteTextFieldView = Flame.TextFieldView.extend(Flame.Statechart, Flame.ActionSupport, {
+    _autocompleteView: null,
+    _lastQueuedQuery: null,
+    autocompleteDelegate: null,
+    initialFlameState: 'idle',
+
+    textField: Flame.TextField.extend({
+        _debounce: null,
+
         keyUp: function(event) {
-            this._elementValueDidChange();
-            if ((event.which === 8 || event.which > 31) && this.get('isAutocomplete')) {
-                this.get('parentView')._fetchAutocompleteResults();
+            this._super(event);
+            this._debounce = Ember.run.debounce(this, 'autocompleteAction', event, 500);
+        },
+
+        autocompleteAction: function(event) {
+            if (event.which === 8 || event.which > 31) {
+                // Don't want to wait until the value has synced, so just grab the raw val from input
+                var query = this.$().val();
+                this.get('parentView').doAutocompleteRequest(query);
                 return true;
             }
-            return false;
         },
 
-        // Trigger a value change notification also when inserting a new line. Otherwise the action could be fired
-        // before the changed value is propagated to this.value property.
-        insertNewline: function() {
-            this._elementValueDidChange();
-            Ember.run.sync();
-            return false;
-        },
-
-        cancel: function() { return false; },
-
-        // The problem here is that we need browser's default handling for these events to make the input field
-        // work. If we had no handlers here and no parent/ancestor view has a handler returning true, it would
-        // all work. But if any ancestor had a handler returning true, the input field would break, because
-        // true return value signals jQuery to cancel browser's default handling. It cannot be remedied by
-        // returning true here, because that has the same effect, thus we need a special return value (which
-        // Flame.EventManager handles specially by stopping the parent propagation).
-        mouseDown: function() { return Flame.ALLOW_BROWSER_DEFAULT_HANDLING; },
-        mouseMove: function() { return Flame.ALLOW_BROWSER_DEFAULT_HANDLING; },
-        mouseUp: function() { return Flame.ALLOW_BROWSER_DEFAULT_HANDLING; }
+        willDestroyElement: function() {
+            this._super();
+            if (this._debounce) Ember.run.cancel(this._debounce);
+        }
     }),
 
-    _autocompleteView: null,
+    idle: Flame.State.extend({
+        enterState: function() {
+            var lastQuery = this.get('owner._lastQueuedQuery');
+            if (lastQuery) {
+                this.set('owner._lastQueuedQuery', null);
+                this.doAutocompleteRequest(lastQuery);
+            }
+        },
 
-    _fetchAutocompleteResults: function() {
-        // Don't want to wait until the value has synced, so just grab the raw val from input
-        var newValue = this.$('input').val();
-        if (newValue) {
-            this.get('autocompleteDelegate').fetchAutocompleteResults(newValue, this);
-        } else {
-            this._closeAutocompleteMenu();
-        }
-    },
+        doAutocompleteRequest: function(query) {
+            if (!this.get('owner.autocompleteDelegate')) return;
 
-    didFetchAutocompleteResults: function(options) {
-        if (options.length === 0) {
-            this._closeAutocompleteMenu();
-            return;
+            if (query && this.get('owner.autocompleteDelegate').fetchAutocompleteResults(query, this.get('owner'))) {
+                this.gotoFlameState('requesting');
+            } else {
+                this.get('owner')._closeAutocompleteMenu();
+            }
         }
+    }),
+
+    requesting: Flame.State.extend({
+        enterState: function() {
+            this.get('owner')._closeAutocompleteMenu();
+        },
+
+        doAutocompleteRequest: function(query) {
+            if (query) this.set('owner._lastQueuedQuery', query);
+        },
+
+        didFinishAutocompleteRequest: function() {
+            this.gotoFlameState('idle');
+        },
+
+        didFetchAutocompleteResults: function(options) {
+            if (options.length === 0) {
+                this.get('owner')._closeAutocompleteMenu();
+                return;
+            }
+
+            // Do not bother to show this result as it's going to be replaced anyway soon with _lastQueuedtQuery results
+            if (this.get('owner._lastQueuedQuery') === null) {
+                this.get('owner')._showAutocompleteMenu(options);
+            }
+        }
+    }),
+
+    _showAutocompleteMenu: function(options) {
         if (!this._autocompleteMenu || this._autocompleteMenu.isDestroyed) {
-                this._autocompleteMenu = Flame.AutocompleteMenuView.create({
-                    minWidth: this.$().width(),
-                    target: this,
-                    textField: this.textField,
-                    action: '_selectAutocompleteItem',
-                    items: options
-                });
-                this._autocompleteMenu.popup(this);
+            this._autocompleteMenu = Flame.AutocompleteMenuView.create({
+                minWidth: this.$().width(),
+                target: this,
+                textField: this.get('textField'),
+                action: '_selectAutocompleteItem',
+                items: options
+            });
+            this._autocompleteMenu.popup(this);
         } else if (!this._autocompleteMenu.isDestroyed) {
             this._autocompleteMenu.set('items', options);
         }
     },
 
+    _selectAutocompleteItem: function(id) {
+        this.set('value', this._autocompleteMenu.get('items').findBy('value', id).title);
+    },
+
     _closeAutocompleteMenu: function() {
-        if (this._autocompleteMenu){
+        if (this._autocompleteMenu) {
             this._autocompleteMenu.close();
             this._autocompleteMenu = null;
         }
+    }
+});
+
+})();
+(function() {
+'use strict';
+
+
+
+// A checkbox. The state of the checkbox is indicated by the isSelected property.
+Flame.CheckboxView = Flame.ButtonView.extend({
+    classNames: ['flame-checkbox-view'],
+    isSticky: true,
+
+    render: function(buffer) {
+        buffer.push('<div class="flame-checkbox-box"></div>');
+        this.renderCheckMark(buffer);
+        buffer.push('<label class="flame-checkbox-label">');
+        buffer.push(Ember.isNone(this.get('title')) ? '' : Handlebars.Utils.escapeExpression(this.get('title')));
+        buffer.push('</label>');
     },
 
-    _selectAutocompleteItem: function(id) {
-        this.set('value', this._autocompleteMenu.get('items').findProperty('value', id).title);
+    renderCheckMark: function(buffer) {
+        var imgUrl = Flame.image('checkmark.svg');
+        buffer.push('<div class="flame-view flame-checkbox-checkmark" style="left: 4px; top: 2px;"><img src="' + imgUrl + '"></div>');
     }
-
 });
+
+})();
+(function() {
+'use strict';
+
+Flame.SelectButtonView = Flame.ButtonView.extend({
+    classNames: ['flame-select-button-view'],
+    items: [],
+    value: undefined,
+    defaultHeight: 22,
+    itemTitleKey: 'title',
+    itemValueKey: 'value',
+    itemActionKey: 'action',
+    subMenuKey: 'subMenu',
+
+    handlebars: function() {
+        var itemTitleKey = this.get('itemTitleKey');
+        return '<label {{bind-attr title="view._selectedMenuItem.%@"}}>{{view._selectedMenuItem.%@}}</label><div><img src="%@"></div>'.fmt(itemTitleKey, itemTitleKey, Flame.image('select_button_arrow.svg'));
+    }.property('itemTitleKey'),
+
+    _selectedMenuItem: function() {
+        if (this.get('value') === undefined) return undefined;
+        var selectedItem = this._findItem();
+        return selectedItem;
+    }.property('value', 'itemValueKey', 'subMenuKey', 'items'),
+
+    itemsDidChange: function() {
+        if (this.get('items') && this.get('items.length') > 0 && !this._findItem()) {
+            this.set('value', this.get('items.firstObject.%@'.fmt(this.get('itemValueKey'))));
+        }
+    }.observes('items'),
+
+    _findItem: function(itemList) {
+        // TODO Rewrite this to return a path to the item or an empty array in case no item can be found.
+        if (!itemList) itemList = this.get('items');
+        var itemValueKey = this.get('itemValueKey'),
+            value = this.get('value'),
+            subMenuKey = this.get('subMenuKey'),
+            foundItem;
+        if (Ember.isNone(itemList)) return foundItem;
+        itemList.forEach(function(item) {
+            var subMenu = Ember.get(item, subMenuKey);
+            if (subMenu) {
+                var possiblyFound = this._findItem(subMenu);
+                if (!Ember.isNone(possiblyFound)) foundItem = possiblyFound;
+            } else if (Ember.get(item, itemValueKey) === value) {
+                foundItem = item;
+            }
+        }, this);
+        return foundItem;
+    },
+
+    mouseDown: function() {
+        if (!this.get('isDisabled')) this._openMenu();
+        return true;
+    },
+
+    insertSpace: function() {
+        this._openMenu();
+        return true;
+    },
+
+    _openMenu: function() {
+        this.gotoFlameState('mouseDownInside');
+
+        // This has to be created dynamically to set the selectButtonView reference (parentView does not work
+        // because a menu is added on the top level of the view hierarchy, not as a child of this view)
+        var self = this;
+        Flame.MenuView.createWithMixins({
+            selectButtonView: this,
+            itemTitleKey: this.get('itemTitleKey'),
+            itemValueKey: this.get('itemValueKey'),
+            itemActionKey: this.get('itemActionKey'),
+            subMenuKey: this.get('subMenuKey'),
+            items: Ember.computed.alias('selectButtonView.items'),
+            value: Ember.computed.alias('selectButtonView.value'),
+            minWidth: this.get('layout.width') || this.$().width(),
+            close: function() {
+                self.gotoFlameState('idle');
+                this._super();
+            }
+        }).popup(this);
+    }
+});
+
+})();
+(function() {
+'use strict';
 
 
 
 
 Flame.ComboBoxView = Flame.SelectButtonView.extend({
     classNames: ['flame-combo-box-view'],
-    childViews: 'textView buttonView'.w(),
-    handlebars: undefined,
+    childViews: ['textView', 'buttonView'],
+    handlebars: null,
     acceptsKeyResponder: false,
 
     textView: Flame.TextFieldView.extend({
         layout: { left: 0, right: 3 },
-        valueBinding: 'parentView.value'
+        value: Ember.computed.alias('parentView.value')
     }),
 
     insertSpace: function() { return false; },
 
     buttonView: Flame.ButtonView.extend({
         acceptsKeyResponder: false,
-        handlebars: '<img src="%@">'.fmt(Flame.image('select_button_arrow.png')),
+        handlebars: '<img src="%@">'.fmt(Flame.image('select_button_arrow.svg')),
         layout: { right: -2, width: 22, height: 22 },
 
         action: function() {
@@ -3809,24 +4104,52 @@ Flame.ComboBoxView = Flame.SelectButtonView.extend({
     })
 });
 
+})();
+(function() {
+'use strict';
+
+
 Flame.DisclosureView = Flame.LabelView.extend({
     classNames: ['flame-disclosure-view'],
 
-    imageExpanded: Flame.image('disclosure_triangle_down.png'),
-    imageCollapsed: Flame.image('disclosure_triangle_left.png'),
+    imageExpanded: Flame.image('disclosure_triangle_down.svg'),
+    imageCollapsed: Flame.image('disclosure_triangle_right.svg'),
 
     image: function() {
         return this.get('visibilityTarget') ? this.get('imageExpanded') : this.get('imageCollapsed');
     }.property('visibilityTarget', 'imageExpanded', 'imageCollapsed'),
 
-    handlebars: '<img {{bindAttr src="image"}}> {{value}}',
+    handlebars: '<img {{bind-attr src="view.image"}}> {{view.value}}',
 
     action: function() {
-        var value = this.getPath('visibilityTarget');
-        this.setPath('visibilityTarget', !value);
+        this.toggleProperty('visibilityTarget');
         return true;
     }
 });
+
+})();
+(function() {
+'use strict';
+
+
+Flame.ErrorMessageView = Flame.LabelView.extend({
+    classNames: ['flame-form-view-validation-error'],
+    classNameBindings: ['pointToClass', 'skinny'],
+    skinny: false,
+    pointTo: 'left',
+    textAlign: function() {
+        return this.get('pointTo') === 'left' ? Flame.ALIGN_LEFT : Flame.ALIGN_RIGHT;
+    }.property('pointTo'),
+    pointToClass: function() {
+        return 'points-to-%@'.fmt(this.get('pointTo'));
+    }.property('pointTo'),
+    handlebars: '<div class="pointer"></div><div class="error-box">{{view.value}}</div>'
+});
+
+})();
+(function() {
+'use strict';
+
 // You must set on object to 'object' that the form manipulates (or use a binding)
 // Optionally you can set a defaultTarget, that will be used to set the default target for any actions
 // triggered from the form (button clicks and default submit via hitting enter)
@@ -3854,11 +4177,13 @@ Flame.FormView = Flame.View.extend({
     init: function() {
         this._super();
 
-        this.set('layoutManager', Flame.VerticalStackLayoutManager.create({
-            topMargin: this.get('topMargin'),
-            spacing: this.get('rowSpacing'),
-            bottomMargin: this.get('bottomMargin')
-        }));
+        if (!this.get('layoutManager')) {
+            this.set('layoutManager', Flame.VerticalStackLayoutManager.create({
+                topMargin: this.get('topMargin'),
+                spacing: this.get('rowSpacing'),
+                bottomMargin: this.get('bottomMargin')
+            }));
+        }
 
         this.set('_errorViews', []);
         this.set('controls', []);
@@ -3869,44 +4194,54 @@ Flame.FormView = Flame.View.extend({
     _propertiesDidChange: function() {
         this.destroyAllChildren();
 
-        var self = this;
-        var childViews = this.get('childViews');
         this.get('properties').forEach(function(descriptor) {
-            var view = self._createLabelAndControl(descriptor);
-            childViews.push(self.createChildView(view));
-        });
+            var view = this._createLabelAndControl(descriptor);
+            this.pushObject(this.createChildView(view));
+        }, this);
 
         var buttons = this.get('buttons');
         if (buttons && buttons.get('length') > 0) {
-            childViews.push(this.createChildView(this._buildButtons(buttons)));
+            this.pushObject(this.createChildView(this._buildButtons(buttons)));
         }
-    }.observes('properties.@each'),
+    }.observes('properties.[]'),
 
-    _createLabelAndControl: function(descriptor) {
-        descriptor = Ember.Object.create(descriptor);
+    _createLabelAndControl: function(desc) {
+        var descriptor = Ember.Object.createWithMixins(desc);
         var control = descriptor.view || this._buildControl(descriptor);
         var formView = this;
 
-        if (Ember.none(descriptor.label)) {
-            return this._createChildViewWithLayout(control, this, this.get('leftMargin') + this._focusRingMargin, this.get('rightMargin') + this._focusRingMargin);
+        var view;
+        if (Ember.isNone(descriptor.label)) {
+            view = this._createChildViewWithLayout(control, this, this.get('leftMargin') + this._focusRingMargin, this.get('rightMargin') + this._focusRingMargin);
         }
         if (descriptor.type === 'checkbox') {
-            return this._createChildViewWithLayout(control, this, this.get('leftMargin') + this.labelWidth + this.columnSpacing - 4, this._focusRingMargin);
+            view = this._createChildViewWithLayout(control, this, this.get('leftMargin') + this.labelWidth + this.columnSpacing - 4, this._focusRingMargin);
+        }
+        if (view) {
+            // The FormView expects all controls to be within another view
+            return Flame.View.extend({
+                layoutManager: Flame.VerticalStackLayoutManager.create({ topMargin: this._focusRingMargin, spacing: 0, bottomMargin: this._focusRingMargin }),
+                childViews: ['control'],
+                control: view
+            });
         }
 
-        var view = {
+        view = {
             layout: { left: this.get('leftMargin'), right: this.get('rightMargin') },
             layoutManager: Flame.VerticalStackLayoutManager.create({ topMargin: this._focusRingMargin, spacing: 0, bottomMargin: this._focusRingMargin }),
             childViews: ['label', 'control'],
 
-            isVisible: descriptor.get('isVisible') === undefined ? true : descriptor.get('isVisible'),
+            isVisible: desc.isVisible === undefined ? true : desc.isVisible,
 
             label: this._buildLabel(descriptor),
-            control: function () {
+            control: function() {
                 return formView._createChildViewWithLayout(control, this, formView.labelWidth + formView.columnSpacing, formView._focusRingMargin);
-            }.property().cacheable()
+            }.property()
         };
-        if (descriptor.get('isVisibleBinding')) view.isVisibleBinding = descriptor.get('isVisibleBinding');
+        if (descriptor.get('isVisibleBinding')) {
+            delete view.isVisible;
+            view.isVisibleBinding = descriptor.get('isVisibleBinding');
+        }
 
         return Flame.View.extend(view);
     },
@@ -3914,8 +4249,8 @@ Flame.FormView = Flame.View.extend({
     _createChildViewWithLayout: function(view, parent, leftMargin, rightMargin) {
         var childView = parent.createChildView(view);
         if (!childView.get('layout')) childView.set('layout', {});
-        childView.setPath('layout.left', leftMargin);
-        childView.setPath('layout.right', rightMargin);
+        childView.set('layout.left', leftMargin);
+        childView.set('layout.right', rightMargin);
         return childView;
     },
 
@@ -3926,7 +4261,7 @@ Flame.FormView = Flame.View.extend({
             textAlign: this.get('labelAlign'),
             value: descriptor.get('label') + ':',
             attributeBindings: ['title'],
-            title: descriptor.get('label')
+            title: descriptor.get('tooltip') || descriptor.get('label')
         });
     },
 
@@ -3936,14 +4271,12 @@ Flame.FormView = Flame.View.extend({
             layout: { left: this.get('leftMargin'), right: this.get('rightMargin'), topMargin: this.get('buttonSpacing'), height: 30 },
             init: function() {
                 this._super();
-                var childViews = this.get('childViews');
                 var right = formView._focusRingMargin;
-                var self = this;
                 (buttons || []).forEach(function(descriptor) {
-                    var buttonView = self.createChildView(formView._buildButton(descriptor, right));
-                    right += (buttonView.getPath('layout.width') || 0) + 15;
-                    childViews.push(buttonView);
-                });
+                    var buttonView = this.createChildView(formView._buildButton(descriptor, right));
+                    right += (buttonView.get('layout.width') || 0) + 15;
+                    this.pushObject(buttonView);
+                }, this);
             }
         });
     },
@@ -3958,7 +4291,7 @@ Flame.FormView = Flame.View.extend({
         }
         properties.layout.top = this._focusRingMargin;
 
-        //if an explicit target is set, we don't want the default targetBinding to be used
+        // if an explicit target is set, we don't want the default targetBinding to be used
         if (descriptor.target) {
             delete properties.targetBinding;
         }
@@ -3967,7 +4300,7 @@ Flame.FormView = Flame.View.extend({
     },
 
     _buildValidationObservers: function(validationMessage) {
-        if (Ember.none(validationMessage)) return {};
+        if (Ember.isNone(validationMessage)) return {};
 
         var self = this;
         return {
@@ -3982,7 +4315,7 @@ Flame.FormView = Flame.View.extend({
                 if (errorView && !this.get('isValid')) {
                     errorView.remove();
                     this.set('_errorView', null);
-                    self._errorViews = self._errorViews.without(errorView);
+                    self.set('_errorViews', self.get('_errorViews').without(errorView));
                 }
             }.observesBefore('isValid'),
 
@@ -3992,7 +4325,7 @@ Flame.FormView = Flame.View.extend({
                     var offset = element.offset();
 
                     // This is strictly not necessary, but currently you can save invalid form with enter, which then fails here
-                    if (Ember.none(offset)) return;
+                    if (Ember.isNone(offset)) return;
 
                     var zIndex = Flame._zIndexCounter;
                     var errorMessage = validationMessage;
@@ -4000,16 +4333,15 @@ Flame.FormView = Flame.View.extend({
                         // XXX This will only work with controls with the value in the 'value' property
                         errorMessage = validationMessage(this.get('value'));
                     }
-                    var errorView = Flame.LabelView.extend({
-                        classNames: 'flame-form-view-validation-error'.w(),
-                        textAlign: Flame.ALIGN_LEFT,
+                    var errorView = Flame.ErrorMessageView.create({
                         layout: { top: offset.top - 7, left: offset.left + element.outerWidth() - 4, width: null, height: null, zIndex: zIndex },
                         value: errorMessage,
-                        handlebars: '<div class="error-triangle"></div><div class="error-box">{{value}}</div>'
-                    }).create().append();
+                        parentView: self,
+                        isVisibleBinding: 'parentView.isVisible'
+                    }).append();
 
-                    this.set("_errorView", errorView);
-                    self._errorViews.push(errorView);
+                    this.set('_errorView', errorView);
+                    self.get('_errorViews').pushObject(errorView);
                 }
             }.observes("isValid")
         };
@@ -4021,12 +4353,13 @@ Flame.FormView = Flame.View.extend({
         if (view instanceof Ember.TextField || view instanceof Ember.TextArea) {
             view = view.get('parentView');
         }
-        // XXX it would be better to cache this, but since it's only a temporary solution and because it's fast
-        // enough even in IE8, it's not worth the effort.
         // Collect all controls that can have keyResponder status
-        var controls = this.get('childViews').mapProperty('childViews').flatten().filter(function(view) {
+        var controls = this.toArray().mapProperty('childViews')
+            .reduce(function(a, b) { return a.concat(b); }).filter(function(view) {
             return view.get('acceptsKeyResponder') && view.get('isVisible');
         });
+        if (Ember.isEmpty(controls)) return;
+
         // Pick out the next or previous control
         var index = controls.indexOf(view);
         index += direction;
@@ -4052,12 +4385,15 @@ Flame.FormView = Flame.View.extend({
     _buildControl: function(descriptor) {
         var property = descriptor.get('property');
         var object = this.get('object');
+        var layout = { topPadding: 1, bottomPadding: 1, width: this.get('controlWidth') };
+        if (descriptor.controlLayout) jQuery.extend(layout, descriptor.controlLayout);
         var settings = {
-            layout: { topPadding: 1, bottomPadding: 1, width: this.get('controlWidth') },
-            valueBinding: '^object.%@'.fmt(property),
-            isValid: Flame.computed.notEquals('parentView.parentView.object.%@IsValid'.fmt(property), false),
-            isDisabled: Flame.computed.equals('parentView.parentView.object.%@IsDisabled'.fmt(property), true)
+            layout: layout,
+            value: Ember.computed.alias('parentView.parentView.object.%@'.fmt(property)),
+            isValid: Ember.computed.notEqual('parentView.parentView.object.%@IsValid'.fmt(property), false),
+            isDisabled: descriptor.isDisabled ? descriptor.isDisabled : Ember.computed.equal('parentView.parentView.object.%@IsDisabled'.fmt(property), true)
         };
+
         if (this.get('defaultFocus') === property) {
             settings.isDefaultFocus = true;
         }
@@ -4074,7 +4410,7 @@ Flame.FormView = Flame.View.extend({
 
         // If a text field (or similar), emulate good old html forms that submit when hitting return by
         // clicking on the default button. This also prevents submitting of disabled forms.
-        if (Ember.none(settings.action) && (type === 'text' || type === 'textarea' || type === 'password')) {
+        if (Ember.isNone(settings.action) && (type === 'text' || type === 'textarea' || type === 'password')) {
             var form = this;
             settings.fireAction = function() {
                 var defaultButton = form.firstDescendantWithProperty('isDefault');
@@ -4099,27 +4435,31 @@ Flame.FormView = Flame.View.extend({
                 settings.titleBinding = 'value';
                 return Flame.LabelView.extend(settings);
             case 'text':
+                settings.name = Ember.isNone(descriptor.name) ? descriptor.property : descriptor.name;
                 if (descriptor.isAutocomplete) {
-                    settings.isAutocomplete = true;
                     settings.autocompleteDelegate = descriptor.autocompleteDelegate;
+                    return Flame.AutocompleteTextFieldView.extend(settings);
                 }
-                settings.name = Ember.none(descriptor.name) ? descriptor.property : descriptor.name;
+                if (descriptor.setValueOnEachKeyUp === false) settings.setValueOnEachKeyUp = false;
                 return Flame.TextFieldView.extend(settings);
             case 'textarea':
                 settings.layout.height = descriptor.height || 70;
                 return Flame.TextAreaView.extend(settings);
             case 'password':
                 settings.isPassword = true;
-                settings.name = Ember.none(descriptor.name) ? descriptor.property : descriptor.name;
+                settings.name = Ember.isNone(descriptor.name) ? descriptor.property : descriptor.name;
                 return Flame.TextFieldView.extend(settings);
             case 'html':
-                return Flame.LabelView.extend(jQuery.extend(settings, {escapeHTML: false, formatter: function(val) {
-                    return val === null ? '' : val;
-                }}));
+                return Flame.LabelView.extend(jQuery.extend(settings, {
+                    escapeHTML: false,
+                    formatter: function(val) {
+                        return val === null ? '' : val;
+                    }
+                }));
             case 'checkbox':
                 settings.title = descriptor.label;
-                settings.isSelectedBinding = settings.valueBinding;
-                delete settings.valueBinding;
+                settings.isSelected = settings.value;
+                delete settings.value;
                 return Flame.CheckboxView.extend(settings);
             case 'select':
                 settings.itemValueKey = descriptor.itemValueKey || "value";
@@ -4129,7 +4469,11 @@ Flame.FormView = Flame.View.extend({
                     settings.itemsBinding = descriptor.optionsBinding;
                 } else if (descriptor.options) {
                     settings.itemTitleKey = descriptor.itemTitleKey || "title";
-                    settings.items = descriptor.options;
+                    if (Ember.typeOf(descriptor.options) === "function") {
+                        settings.items = descriptor.options.apply(this);
+                    } else {
+                        settings.items = descriptor.options;
+                    }
                 }
                 if (!descriptor.get('allowNew')) {
                     return Flame.SelectButtonView.extend(settings);
@@ -4137,73 +4481,104 @@ Flame.FormView = Flame.View.extend({
                     return Flame.ComboBoxView.extend(settings);
                 }
         }
-        throw 'Invalid control type %@'.fmt(type);
+        throw new Error('Invalid control type %@'.fmt(type));
     },
 
     willDestroyElement: function() {
-        this._errorViews.forEach(function(e) { e.remove(); });
-    }
+        this.get('_errorViews').forEach(function(e) { e.remove(); });
+    },
+
+    isValid: function() {
+        return this.get('_errorViews').length === 0;
+    }.property('_errorViews.[]')
 });
-Flame.SplitView = Flame.View.extend({
-    allowResizing: true,
-    dividerThickness: 7,
 
-    dividerView: Flame.View.extend(Flame.Statechart, {
-        classNames: 'flame-split-view-divider'.w(),
-        initialState: 'idle',
+})();
+(function() {
+'use strict';
 
-        idle: Flame.State.extend({
-            mouseDown: function(event) {
-                var parentView = this.getPath('owner.parentView');
-                if (!parentView.get('allowResizing')) return false;
-                parentView.startResize(event);
-                this.gotoState('resizing');
-                return true;
-            },
+Flame.SplitViewDividerViewBase = Ember.Mixin.create(Flame.Statechart, {
+    classNames: ['flame-split-view-divider'],
+    initialFlameState: 'idle',
 
-            touchStart: function(event) {
-                // Normalize the event and send it to mouseDown
-                this.mouseDown(this.normalizeTouchEvents(event));
-                return true;
-            },
+    idle: Flame.State.extend({
+        mouseDown: function(event) {
+            var parentView = this.get('owner.parentView');
+            if (!parentView.get('allowResizing')) return false;
+            parentView.startResize(event, this);
+            this.gotoFlameState('resizing');
+            return true;
+        },
 
-            doubleClick: function(event) {
-                var parentView = this.getPath('owner.parentView');
-                if (!parentView.get('allowResizing')) return false;
-                parentView.toggleCollapse(event);
-                return true;
+        touchStart: function(event) {
+            // Normalize the event and send it to mouseDown
+            this.mouseDown(this.normalizeTouchEvents(event));
+            return true;
+        },
+
+        doubleClick: function(event) {
+            var parentView = this.get('owner.parentView');
+            if (!parentView.get('allowResizing')) return false;
+            parentView.toggleCollapse(event);
+            return true;
+        }
+    }),
+
+    resizing: Flame.State.extend({
+        mouseMove: function(event) {
+            this.get('owner.parentView').resize(event);
+            return true;
+        },
+
+        touchMove: function(event) {
+            // Don't scroll the page while we're doing this
+            event.preventDefault();
+            // Normalize the event and send it to mouseDown
+            this.mouseMove(this.normalizeTouchEvents(event));
+            return true;
+        },
+
+        mouseUp: Flame.State.gotoFlameState('idle'),
+        touchEnd: Flame.State.gotoFlameState('idle'),
+
+        exitState: function() {
+            var parentView = this.get('owner.parentView');
+            if (parentView.endResize) {
+                parentView.endResize();
             }
-        }),
-
-        resizing: Flame.State.extend({
-            mouseMove: function(event) {
-                this.getPath('owner.parentView').resize(event);
-                return true;
-            },
-
-            touchMove: function(event) {
-                // Don't scroll the page while we're doing this
-                event.preventDefault();
-                // Normalize the event and send it to mouseDown
-                this.mouseMove(this.normalizeTouchEvents(event));
-                return true;
-            },
-
-            mouseUp: Flame.State.gotoHandler('idle'),
-            touchEnd: Flame.State.gotoHandler('idle')
-        })
+        }
     })
 });
 
+})();
+(function() {
+'use strict';
 
-/*
- * HotizontalSplitView divides the current view between topView and bottomView using a horizontal
- * dividerView.
- */
+
+Flame.SplitView = Flame.View.extend({
+    allowResizing: true,
+    dividerThickness: 7,
+    dividerView: Flame.View.extend(Flame.SplitViewDividerViewBase),
+
+    didInsertElement: function() {
+        this._updateLayout();
+    }
+});
+
+})();
+(function() {
+'use strict';
+
+
+
+/**
+  HotizontalSplitView divides the current view between topView and bottomView using a horizontal
+  dividerView.
+*/
 
 Flame.HorizontalSplitView = Flame.SplitView.extend({
-    classNames: 'flame-horizontal-split-view'.w(),
-    childViews: 'topView dividerView bottomView'.w(),
+    classNames: ['flame-horizontal-split-view'],
+    childViews: ['topView', 'dividerView', 'bottomView'],
     topHeight: 100,
     bottomHeight: 100,
     minTopHeight: 0,
@@ -4220,15 +4595,8 @@ Flame.HorizontalSplitView = Flame.SplitView.extend({
         Ember.assert('Flame.HorizontalSplitView needs topView and bottomView!', !!this.get('topView') && !!this.get('bottomView'));
         this._super();
 
-        if (this.get('flex') === 'bottom') this.bottomHeight = undefined;
-        else this.topHeight = undefined;
-
-        this._updateLayout();  // Update layout according to the initial heights
-
-        this.addObserver('topHeight', this, this._updateLayout);
-        this.addObserver('bottomHeight', this, this._updateLayout);
-        this.addObserver('minTopHeight', this, this._updateLayout);
-        this.addObserver('minBottomHeight', this, this._updateLayout);
+        if (this.get('flex') === 'bottom') this.set('bottomHeight', undefined);
+        else this.set('topHeight', undefined);
     },
 
     _updateLayout: function() {
@@ -4240,14 +4608,14 @@ Flame.HorizontalSplitView = Flame.SplitView.extend({
         var dividerThickness = this.get('dividerThickness');
         var topHeight = this.get('flex') === 'bottom' ? this.get('topHeight') : undefined;
         var bottomHeight = this.get('flex') === 'top' ? this.get('bottomHeight') : undefined;
-        if (topHeight === undefined && bottomHeight !== undefined && totalHeight !== null) topHeight = totalHeight - bottomHeight - dividerThickness;
-        if (bottomHeight === undefined && topHeight !== undefined && totalHeight !== null) bottomHeight = totalHeight - topHeight - dividerThickness;
+        if (topHeight === undefined && bottomHeight !== undefined && totalHeight !== null && totalHeight !== 0) topHeight = totalHeight - bottomHeight - dividerThickness;
+        if (bottomHeight === undefined && topHeight !== undefined && totalHeight !== null && totalHeight !== 0) bottomHeight = totalHeight - topHeight - dividerThickness;
 
-        if ('number' === typeof topHeight && topHeight < this.get('minTopHeight')) {
+        if (typeof topHeight === 'number' && topHeight < this.get('minTopHeight')) {
             bottomHeight += topHeight - this.get('minTopHeight');
             topHeight = this.get('minTopHeight');
         }
-        if ('number' === typeof bottomHeight && bottomHeight < this.get('minBottomHeight')) {
+        if (typeof bottomHeight === 'number' && bottomHeight < this.get('minBottomHeight')) {
             topHeight += bottomHeight - this.get('minBottomHeight');
             bottomHeight = this.get('minBottomHeight');
         }
@@ -4255,24 +4623,24 @@ Flame.HorizontalSplitView = Flame.SplitView.extend({
         this.set('bottomHeight', bottomHeight);
 
         if (this.get('flex') === 'bottom') {
-            this._setDimensions(topView, 0, topHeight, undefined);
-            this._setDimensions(dividerView, topHeight, dividerThickness, undefined);
-            this._setDimensions(bottomView, topHeight + dividerThickness, undefined, 0);
+            this._setDimensions(topView, 0, topHeight, '');
+            this._setDimensions(dividerView, topHeight, dividerThickness, '');
+            this._setDimensions(bottomView, topHeight + dividerThickness, '', 0);
         } else {
-            this._setDimensions(topView, 0, undefined, bottomHeight + dividerThickness);
-            this._setDimensions(dividerView, undefined, dividerThickness, bottomHeight);
-            this._setDimensions(bottomView, undefined, bottomHeight, 0);
+            this._setDimensions(topView, 0, '', bottomHeight + dividerThickness);
+            this._setDimensions(dividerView, '', dividerThickness, bottomHeight);
+            this._setDimensions(bottomView, '', bottomHeight, 0);
         }
-    },
+    }.observes('topHeight', 'bottomHeight', 'minTopHeight', 'minBottomHeight'),
 
     _setDimensions: function(view, top, height, bottom) {
-        var layout = view.get('layout');
-        layout.set('left', 0);
-        layout.set('height', height);
-        layout.set('right', 0);
-        layout.set('top', top);
-        layout.set('bottom', bottom);
-
+        view.get('layout').setProperties({
+            left: 0,
+            height: height,
+            right: 0,
+            top: top,
+            bottom: bottom
+        });
         view.updateLayout();
     },
 
@@ -4310,6 +4678,11 @@ Flame.HorizontalSplitView = Flame.SplitView.extend({
         }
     }
 });
+
+})();
+(function() {
+'use strict';
+
 Flame.ListItemView = Flame.View.extend({
     useAbsolutePosition: false,
     classNames: ['flame-list-item-view'],
@@ -4372,6 +4745,11 @@ Flame.ListItemView = Flame.View.extend({
     }
 });
 
+})();
+(function() {
+'use strict';
+
+
 Flame.LazyListViewStates = {};
 
 Flame.LazyListViewStates.MouseIsDown = Flame.State.extend({
@@ -4382,15 +4760,19 @@ Flame.LazyListViewStates.MouseIsDown = Flame.State.extend({
 
     mouseMove: function(event) {
         var owner = this.get('owner');
-        if (!owner.getPath('parentView.allowReordering')) return true;
+        var parentView = owner.get('parentView');
+        if (!parentView.get('allowReordering') || parentView.disableReordering(event)) return true;
+        if (this.xOffset === null) {
+            this.xOffset = event.pageX;
+            this.yOffset = event.pageY;
+        }
         // Only start dragging if we move more than 2 pixels vertically
-        if (this.xOffset === null) { this.xOffset = event.pageX; this.yOffset = event.pageY; }
         if (Math.abs(event.pageY - this.yOffset) < 3) return true;
 
         var offset = owner.$().offset();
-        this.setPath('owner.xOffset', this.xOffset - offset.left);
-        this.setPath('owner.yOffset', this.yOffset - offset.top);
-        this.gotoState('dragging');
+        this.set('owner.xOffset', this.xOffset - offset.left);
+        this.set('owner.yOffset', this.yOffset - offset.top);
+        this.gotoFlameState('dragging');
         return true;
     },
 
@@ -4398,19 +4780,19 @@ Flame.LazyListViewStates.MouseIsDown = Flame.State.extend({
         var owner = this.get('owner');
         var parentView = owner.get('parentView');
         parentView.selectIndex(owner.get('contentIndex'));
-        this.gotoState('idle');
+        this.gotoFlameState('idle');
         return true;
     }
 });
 
 Flame.LazyListItemView = Flame.ListItemView.extend(Flame.Statechart, {
     layout: { left: 0, right: 0, height: 25 },
-    initialState: 'idle',
+    initialFlameState: 'idle',
 
     init: function() {
-        this._super();
         // Don't rerender the item view when the content changes
         this.set('displayProperties', []);
+        this._super();
     },
 
     mouseDown: function(event) {
@@ -4430,7 +4812,7 @@ Flame.LazyListItemView = Flame.ListItemView.extend(Flame.Statechart, {
 
     idle: Flame.State.extend({
         mouseDown: function() {
-            this.gotoState('mouseIsDown');
+            this.gotoFlameState('mouseIsDown');
         }
     }),
 
@@ -4445,19 +4827,19 @@ Flame.LazyListItemView = Flame.ListItemView.extend(Flame.Statechart, {
             var owner = this.get('owner');
             var listView = owner.get('parentView');
             if (owner.willStartDragging) owner.willStartDragging();
-            var listViewElement = listView.$();
-            this.setPath('owner.isDragged', true);
+            var $listView = listView.$();
+            this.set('owner.isDragged', true);
             this.scrollViewOffset = listView.get('parentView').$().offset();
-            this.clone = this.get('owner').$().safeClone();
+            this.clone = this.$().safeClone();
             this.clone.addClass('dragged-clone');
-            this.clone.draggingInfo = { currentIndex: this.getPath('owner.contentIndex') };
-            this.indicator = jQuery('<div class="indicator"><img src="%@"></div>'.fmt(Flame.image('reorder_indicator.png'))).hide();
-            listViewElement.append(this.clone);
-            listViewElement.append(this.indicator);
+            this.clone.draggingInfo = { currentIndex: this.get('owner.contentIndex') };
+            this.indicator = jQuery('<div class="indicator"><img src="%@"></div>'.fmt(Flame.image('reorder_indicator.svg'))).hide();
+            $listView.append(this.clone);
+            $listView.append(this.indicator);
         },
 
         exitState: function() {
-            this.setPath('owner.isDragged', false);
+            this.set('owner.isDragged', false);
             this.finishDragging();
             this.clone.remove();
             this.clone = null;
@@ -4477,29 +4859,34 @@ Flame.LazyListItemView = Flame.ListItemView.extend(Flame.Statechart, {
         },
 
         mouseUp: function() {
-            this.gotoState('idle');
+            this.gotoFlameState('idle');
             return true;
         },
 
         didDragItem: function(newTop, newLeft) {
-            if (this.getPath('owner.parentView.constrainDragginToXAxis')) {
+            if (this.get('owner.parentView.constrainDragginToXAxis')) {
                 this.clone.css({top: newTop});
             } else {
                 this.clone.css({top: newTop, left: newLeft});
             }
-            var itemHeight = this.getPath('owner.parentView.itemHeight');
+            var itemHeight = this.get('owner.parentView.itemHeight');
             var index = Math.ceil(newTop / itemHeight);
-            this.clone.draggingInfo = this.getPath('owner.parentView').indexForMovedItem(this.clone.draggingInfo, index, this.getPath('owner.contentIndex'));
+            this.clone.draggingInfo = this.get('owner.parentView').indexForMovedItem(this.clone.draggingInfo, index, this.get('owner.contentIndex'), newLeft);
             var height = this.clone.draggingInfo.currentIndex * itemHeight;
-            this.indicator.css({top: height - 1 + 'px'});
+            this.indicator.css({ top: height - 1 + 'px', 'margin-left': this.clone.draggingInfo.level * 20 + 7 + 'px' });
             this.indicator.show();
         },
 
         finishDragging: function() {
-            this.getPath('owner.parentView').moveItem(this.getPath('owner.contentIndex'), this.clone.draggingInfo);
+            this.get('owner.parentView').moveItem(this.get('owner.contentIndex'), this.clone.draggingInfo);
         }
     })
 });
+
+})();
+(function() {
+'use strict';
+
 /**
   This helper class hides the ugly details of doing dragging in list views and tree views.
 
@@ -4568,7 +4955,7 @@ Flame.ListViewDragHelper = Ember.Object.extend({
         var element = view.$();
         var clone = element.clone();
 
-        if (element.attr('id')) clone.attr('id', element.attr('id')+"_drag");
+        if (element.attr('id')) clone.attr('id', element.attr('id') + "_drag");
         clone.addClass('is-dragged-clone');
         clone.find("*").each(function() {
             if (this.id) this.id = this.id + "_drag";
@@ -4577,7 +4964,7 @@ Flame.ListViewDragHelper = Ember.Object.extend({
 
         clone.css('opacity', 0.8);
 
-        this.set('clone', clone);
+        this.clone = clone;
         this._updateCss();
 
         // As the clone is not linked to any Ember view, we have to add custom event handlers on it
@@ -4593,53 +4980,64 @@ Flame.ListViewDragHelper = Ember.Object.extend({
     },
 
     // Moves the clone to match the current mouse position and moves the dragged item in the list/tree if needed
-    updateDisplay: function(evt, scheduled) {
+    updateDisplay: function(event, scheduled) {
         // This logic discards mouseMove events scheduled by the scrolling logic in case there's been a real mouseMove event since scheduled
         if (scheduled === undefined) this.mouseMoveCounter++;
-        else if (scheduled < this.mouseMoveCounter) return false;
+        else if (scheduled <= this.mouseMoveCounter) return;
 
-        this._updateDraggingCloneAndScrollPosition(evt);
-        var newPath = this._resolveNewPath(evt.pageX, evt.pageY);
+        this._updateDraggingCloneAndScrollPosition(event);
+        var newPath = this._resolveNewPath(event.pageX, event.pageY);
 
         if (newPath && !this.itemPath.equals(newPath)) {
             var view = this.itemPath.getView();
             this._moveItem(this.itemPath, newPath);
             this.itemPath = this._resolvePath(view);
-            this._updateCss();
-            this.lastPageX = evt.pageX;  // Reset the reference point for horizontal movement every time the item is moved
+            // CSS can only be updated once all the rendering has been done
+            Ember.run.scheduleOnce('afterRender', this, this._updateCss);
+            this.lastPageX = event.pageX;  // Reset the reference point for horizontal movement every time the item is moved
         }
-
-        return true;
     },
 
     finishReorder: function() {
         var itemPathView = this.itemPath.getView();
-        this.get('listView').didReorderContent(itemPathView.getPath('parentView.content'));
-        itemPathView.set("isDragged", false);
-        this.clone.remove();  // Remove the clone holding the clones from the DOM
+        this.get('listView').didReorderContent(itemPathView.get('parentView.content'));
+        itemPathView.set('isDragged', false);
+        var clone = this.clone;
+        Ember.run.schedule('afterRender', function() {
+            // We can't remove the clone right away, we still need to get its
+            // position earlier on in the afterRender queue.
+            if (clone) clone.remove(); // Remove the clone holding the clones from the DOM
+        });
     },
 
     // Updates the css classes and 'left' property of the clone and its children, needed for fixing indentation
     // to match the current item position in a tree view.
     _updateCss: function() {
         var draggedElement = this.itemPath.getView().$();
-        var rootOffsetLeft = this.clone.offsetParent().offset().left;
+        if (draggedElement) {
+            var rootOffsetLeft = this.clone.offsetParent().offset().left;
 
-        this.clone.attr('class', draggedElement.attr('class') + ' is-dragged-clone');
-        this.clone.css('left', draggedElement.offset().left - rootOffsetLeft);
+            this.clone.attr('class', draggedElement.attr('class') + ' is-dragged-clone');
+            this.clone.css('left', draggedElement.offset().left - rootOffsetLeft);
 
-        var originals = this.itemPath.getView().$().find('.flame-tree-item-view', '.flame-tree-view');
-        var children = this.clone.find('.flame-tree-item-view', '.flame-tree-view');
-        children.each(function(i) {
-            var element = jQuery(this), origElement = jQuery(originals.get(i));
-            element.attr('class', origElement.attr('class'));
-            rootOffsetLeft = element.offsetParent().offset().left;
-            element.css('left', origElement.offset().left - rootOffsetLeft);
-        });
+            var originals = this.itemPath.getView().$().find('.flame-tree-item-view', '.flame-tree-view');
+            var children = this.clone.find('.flame-tree-item-view', '.flame-tree-view');
+            children.each(function(i) {
+                var element = jQuery(this), origElement = jQuery(originals.get(i));
+                element.attr('class', origElement.attr('class'));
+                rootOffsetLeft = element.offsetParent().offset().left;
+                element.css('left', origElement.offset().left - rootOffsetLeft);
+            });
+        }
     },
 
     // Moves the dragged element in the list/tree to a new location, possibly under a new parent
     _moveItem: function(sourcePath, targetPath) {
+        // This is really hacky, we need to make sure that when we alter the content
+        // array, the array observers do nothing (since we also manually remove the childView).
+        var isDragging = this.get('listView.isDragging');
+        this.set('listView.isDragging', true);
+
         var view = sourcePath.getView();
         var contentItem = view.get('content');
         var sourceParent = view.get('parentView');
@@ -4650,39 +5048,39 @@ Flame.ListViewDragHelper = Ember.Object.extend({
         var targetElement = targetView.$();
         var targetParent = targetPath.position === 'i' ? targetPath.getNestedListView() : targetView.get('parentView');
         var targetContent = targetParent.get('content');
-        var targetChildViews = targetParent.get('childViews');
 
         // First remove the view, the content item and the DOM element from their current parent.
         // If moving inside the same parent, use a special startMoving+endMoving API provided by
         // Flame.SortingArrayProxy to protect against non-modifiable arrays (the sort property is
         // still updated).
         if (sourceContent === targetContent && sourceContent.startMoving) sourceContent.startMoving();
-        sourceParent.get('childViews').removeObject(view);
+        sourceParent.removeObject(view);
         sourceContent.removeObject(contentItem);
         sourceParent._updateContentIndexes();
         element.detach();
 
         // Then insert them under the new parent, at the correct position
-        var targetIndex = targetView.get('contentIndex');
+        var contentIndex = targetView.get('contentIndex'), targetIndex;
         if (targetPath.position === 'b') {
             element.insertBefore(targetElement);
-            targetChildViews.insertAt(targetIndex, view);
-            targetContent.insertAt(targetIndex, contentItem);
+            targetIndex = contentIndex;
         } else if (targetPath.position === 'a') {
             element.insertAfter(targetElement);
-            targetChildViews.insertAt(targetIndex+1, view);
-            targetContent.insertAt(targetIndex+1, contentItem);
+            targetIndex = contentIndex + 1;
         } else if (targetPath.position === 'i') {
             targetElement.find('.flame-list-view').first().prepend(element);
-            targetChildViews.insertAt(0, view);
-            targetContent.insertAt(0, contentItem);
-        } else throw 'Invalid insert position ' + targetPath.position;
+            targetIndex = 0;
+        } else throw new Error('Invalid insert position ' + targetPath.position);
+        view.set('_parentView', targetParent);
+        targetParent.insertAt(targetIndex, view);
+        targetContent.insertAt(targetIndex, contentItem);
 
         if (sourceContent === targetContent && sourceContent.endMoving) sourceContent.endMoving();
         // We need to do this manually because ListView suppresses the childViews observers while dragging,
         // so that we can do the entire DOM manipulation ourselves here without the list view interfering.
-        view.set('_parentView', targetParent);
         targetParent._updateContentIndexes();
+
+        this.set('listView.isDragging', isDragging);
     },
 
     isTree: function() {
@@ -4711,13 +5109,11 @@ Flame.ListViewDragHelper = Ember.Object.extend({
         var len = itemElements.length;
         var newIndex = startIndex;
 
-        //console.log('startIndex %s, currentDy %s, len %s, i %s', startIndex, currentDy, len, i);
         while (i >= 0 && i < len) {
             var testElement = jQuery(itemElements[i]);
             if (testElement.closest('.is-dragged-clone').length > 0) break;  // Ignore the clone
             if (testElement.is(':visible') && testElement.closest(draggedElement).length === 0) {
                 var thresholdY = testElement.offset().top + testElement.outerHeight() * (0.5 + direction * 0.2);
-                //console.log('cloneTop %s, cloneBottom %s, i %s, test top %s, thresholdY', cloneTop, cloneBottom, i, testElement.offset().top, thresholdY);
 
                 if ((direction > 0 && cloneBottom > thresholdY) || (direction < 0 && cloneTop < thresholdY)) {
                     newIndex = i;
@@ -4755,7 +5151,7 @@ Flame.ListViewDragHelper = Ember.Object.extend({
         // If as the last item of a nested list, moving left moves one level up (placing immediately after current parent), OR
         // if the current level isn't valid, try and see if there is a valid drop one level up
         while ((xDiff < -xStep || this._pathInvalid(draggedView, path)) && (path.position === 'a' || this.itemPath.equals(path)) &&
-               path.array.length > 1 && targetView.get('contentIndex') === targetView.getPath('parentView.childViews.length') - 1) {
+               path.array.length > 1 && targetView.get('contentIndex') === targetView.get('parentView.length') - 1) {
             xDiff += xStep;
             path = path.up();
             targetView = path.getView();
@@ -4781,7 +5177,7 @@ Flame.ListViewDragHelper = Ember.Object.extend({
         var newParent = null;
         if (targetPath.position === 'i') {
             newParent = dropTarget;
-        }  else {
+        } else {
             var newParentItemView = targetPath.up().getView();
             if (newParentItemView) {
                 newParent = newParentItemView.get('content');
@@ -4792,7 +5188,7 @@ Flame.ListViewDragHelper = Ember.Object.extend({
     },
 
     _getPrecedingView: function(view) {
-        return view.get('contentIndex') > 0 ? view.getPath('parentView.childViews').objectAt(view.get('contentIndex') - 1) : undefined;
+        return view.get('contentIndex') > 0 ? view.get('parentView').objectAt(view.get('contentIndex') - 1) : undefined;
     },
 
     _resolvePath: function(view) {
@@ -4807,12 +5203,12 @@ Flame.ListViewDragHelper = Ember.Object.extend({
         return Flame.ListViewDragHelper.Path.create({array: pathArray, root: this.listView});
     },
 
-    _updateDraggingCloneAndScrollPosition: function(evt) {
+    _updateDraggingCloneAndScrollPosition: function(event) {
         var domParent = this.get('listView').$();
         if (domParent.hasClass('is-nested')) domParent = domParent.offsetParent();  // If nested list in a tree, grab the topmost
         var scrollTop = domParent.scrollTop();
         var parentHeight = domParent.innerHeight();
-        var newTop = evt.pageY - this.yOffset - domParent.offset().top + scrollTop;
+        var newTop = event.pageY - this.yOffset - domParent.offset().top + scrollTop;
 
         // Check top and bottom limits to disallow moving beyond the content area of the list view
         if (newTop < 0) newTop = 0;
@@ -4820,7 +5216,7 @@ Flame.ListViewDragHelper = Ember.Object.extend({
         var scrollHeight = domParent[0].scrollHeight;  // See http://www.yelotofu.com/2008/10/jquery-how-to-tell-if-youre-scroll-to-bottom/
         if (newTop + height > scrollHeight) newTop = scrollHeight - height;
 
-        this.clone.css({position: 'absolute', right: 0, top: newTop});
+        this.clone.css({ position: 'absolute', right: 0, top: newTop });
 
         // See if we should scroll the list view either up or down (don't scroll if overflow is not auto, can cause undesired tiny movement)
         if (domParent.css('overflow') === 'auto') {
@@ -4833,17 +5229,16 @@ Flame.ListViewDragHelper = Ember.Object.extend({
                 domParent.scrollTo('+=%@px'.fmt(Math.max(bottomDiff / 5, 1)));
             }
             if (topDiff > 0 || bottomDiff > 0) {  // If scrolled, schedule an artificial mouseMove event to keep scrolling
-                var currentCounter = this.mouseMoveCounter;
-                Ember.run.next(this, function() { this.updateDisplay(evt, currentCounter); });
+                Ember.run.scheduleOnce('afterRender', this, this.updateDisplay, event, this.mouseMoveCounter);
             }
         }
     }
 });
 
-/*
+/**
   A helper class for the drag helper, represents a potential insert location in a list/tree.
   See docs for ListViewDragHelper above for details.
- */
+*/
 Flame.ListViewDragHelper.Path = Ember.Object.extend({
     array: [],
     position: 'i',
@@ -4853,7 +5248,7 @@ Flame.ListViewDragHelper.Path = Ember.Object.extend({
         var view, i, len = this.array.length, listView = this.root;
         for (i = 0; i < len; i++) {
             var index = this.array[i];
-            view = listView.get('childViews').objectAt(index);
+            view = listView.objectAt(index);
             if (i < len - 1) {
                 listView = view.get('childListView');
             }
@@ -4862,7 +5257,7 @@ Flame.ListViewDragHelper.Path = Ember.Object.extend({
     },
 
     getNestedListView: function() {
-        return this.getView().get("childListView");
+        return this.getView().get('childListView');
     },
 
     up: function() {
@@ -4873,7 +5268,7 @@ Flame.ListViewDragHelper.Path = Ember.Object.extend({
     down: function() {
         var newArray = Ember.copy(this.array);
         var newPosition;
-        var nestedChildrenCount = this.getNestedListView().getPath('content.length');
+        var nestedChildrenCount = this.getNestedListView().get('content.length');
         if (nestedChildrenCount > 0) {
             newArray.push(nestedChildrenCount - 1);
             newPosition = 'a';
@@ -4894,6 +5289,11 @@ Flame.ListViewDragHelper.Path = Ember.Object.extend({
     }
 });
 
+})();
+(function() {
+'use strict';
+
+
 
 
 
@@ -4913,8 +5313,9 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
     allowSelection: true,
     allowReordering: true,
     selection: undefined,
-    initialState: 'idle',
+    initialFlameState: 'idle',
     reorderDelegate: null,
+    _minimumDeltaToStartDrag: 4,
     init: function() {
         this._super();
         this._selectionDidChange();
@@ -4923,16 +5324,16 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
     itemViewClass: Flame.ListItemView.extend({
         templateContext: function(key, value) {
             return value !== undefined ? value : Ember.get(this, 'content');
-        }.property('content').cacheable(),
-        templateBinding: "parentView.template",
-        handlebars: "{{title}}"
+        }.property('content'),
+        template: Ember.computed.alias('parentView.template'),
+        handlebars: '{{view.title}}'
     }),
 
     selectIndex: function(index) {
         if (!this.get('allowSelection')) return false;
         var content = this.get('content');
         if (content) {
-            var childView = this.get('childViews').objectAt(index);
+            var childView = this.objectAt(index);
             if (childView && childView.get('isVisible') && childView.get('allowSelection') !== false) {
                 var selection = content.objectAt(index);
                 this.set('selection', selection);
@@ -4968,7 +5369,7 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
         if (contentItem) {
             var index = (this.get('content') || []).indexOf(contentItem);
             if (index >= 0) {
-                var child = this.get('childViews').objectAt(index);
+                var child = this.objectAt(index);
                 if (child) child.set('isSelected', status);
             }
         }
@@ -4976,10 +5377,9 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
 
     // If items are removed or reordered, we must update the contentIndex of each childView to reflect their current position in the list
     _updateContentIndexes: function() {
-        var childViews = this.get('childViews');
-        var len = childViews.get('length');
+        var len = this.get('length');
         for (var i = 0; i < len; i++) {
-            var childView = childViews.objectAt(i);
+            var childView = this.objectAt(i);
             if (childView) childView.set('contentIndex', i);
         }
         // In case the child views are using absolute positioning, also their positions need to be updated,
@@ -5008,16 +5408,16 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
     // Overridden in TreeView
     rootTreeView: function() {
         return this;
-    }.property(),
+    }.property().volatile(),
 
     arrayWillChange: function(content, start, removedCount) {
-        if (!this.getPath('rootTreeView.isDragging')) {
+        if (!this.get('rootTreeView.isDragging')) {
             return this._super.apply(this, arguments);
         }
     },
 
     arrayDidChange: function(content, start, removed, added) {
-        if (!this.getPath('rootTreeView.isDragging')) {
+        if (!this.get('rootTreeView.isDragging')) {
             var result = this._super.apply(this, arguments);
             this._updateContentIndexes();
             return result;
@@ -5025,14 +5425,14 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
     },
 
     childViewsWillChange: function() {
-        if (!this.getPath('rootTreeView.isDragging')) {
-            return this._super.apply(this, arguments);
+        if (!this.get('rootTreeView.isDragging')) {
+            this._super.apply(this, arguments);
         }
     },
 
     childViewsDidChange: function() {
-        if (!this.getPath('rootTreeView.isDragging')) {
-            return this._super.apply(this, arguments);
+        if (!this.get('rootTreeView.isDragging')) {
+            this._super.apply(this, arguments);
         }
     },
 
@@ -5045,7 +5445,7 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
         moveUp: function() { return this.get('owner').changeSelection(-1); },
         moveDown: function() { return this.get('owner').changeSelection(1); },
 
-        mouseDownOnItem: function(itemIndex, evt) {
+        mouseDownOnItem: function(itemIndex, event) {
             var owner = this.get('owner');
             owner.selectIndex(itemIndex);
 
@@ -5053,18 +5453,18 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
             // but only if reordering is generally allowed for this list view and for the particular item
             if (owner.get('allowReordering') && itemIndex !== undefined) {
                 if (owner.allowReorderingItem(itemIndex)) {
-                    //console.log('Drag started on %s, dragging %s items', itemIndex, itemCount);
-                    var childView = owner.get('childViews').objectAt(itemIndex);
+                    var childView = owner.objectAt(itemIndex);
                     owner.set('dragHelper', Flame.ListViewDragHelper.create({
                         listView: owner,
-                        lastPageX: evt.pageX,
-                        yOffset: evt.pageY - childView.$().offset().top,
+                        lastPageX: event.pageX,
+                        lastPageY: event.pageY,
+                        yOffset: event.pageY - childView.$().offset().top,
                         itemPath: [itemIndex]
                     }));
                 }
             }
 
-            this.gotoState('mouseButtonPressed');
+            this.gotoFlameState('mouseButtonPressed');
 
             // Have to always return true here because the user might start dragging, and if so, we need the mouseMove events.
             return true;
@@ -5075,29 +5475,41 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
         }
     }),
 
+    _shouldStartDragging: function(event) {
+        var dragHelper = this.get('dragHelper');
+        if (dragHelper) {
+            // Only enter reordering state if it was allowed, indicated by the presence of dragHelper and then only if
+            // we've moved the mouse enough from the start.
+            var deltaX = Math.abs(dragHelper.get("lastPageX") - event.pageX);
+            var deltaY = Math.abs(dragHelper.get("lastPageY") - event.pageY);
+            return deltaX > this._minimumDeltaToStartDrag || deltaY > this._minimumDeltaToStartDrag;
+        }
+        return false;
+    },
+
     // This is here so that we can override the behaviour in tree views
     startReordering: function(dragHelper, event) {
         dragHelper.set('listView', this);
         this.set('dragHelper', dragHelper);
-        this.gotoState('reordering');
+        this.gotoFlameState('reordering');
         return this.mouseMove(event);  // Handle also this event in the new state
     },
 
     mouseButtonPressed: Flame.State.extend({
-        mouseUpOnItem: Flame.State.gotoHandler('idle'),
-        mouseUp: Flame.State.gotoHandler('idle'),
+        mouseUpOnItem: Flame.State.gotoFlameState('idle'),
+        mouseUp: Flame.State.gotoFlameState('idle'),
 
         mouseMove: function(event) {
             var owner = this.get('owner');
-            if (owner.get('dragHelper')) {  // Only enter reordering state if it was allowed, indicated by the presence of dragHelper
-                var dragHelper = owner.get('dragHelper');
-                this.gotoState('idle');
+            var dragHelper = owner.get('dragHelper');
+            if (owner._shouldStartDragging(event)) {
+                this.gotoFlameState('idle');
                 owner.startReordering(dragHelper, event);
             }
             return true;
         },
 
-        touchEnd: Flame.State.gotoHandler('idle'),
+        touchEnd: Flame.State.gotoFlameState('idle'),
 
         touchMove: function(event) {
             this.mouseMove(this.normalizeTouchEvents(event));
@@ -5106,18 +5518,20 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
     }),
 
     reordering: Flame.State.extend({
-        mouseMove: function(evt, view, scheduled) {
-            return this.get('owner').get('dragHelper').updateDisplay(evt);
+        mouseMove: function(event, view, scheduled) {
+            var dragHelper = this.get('owner.dragHelper');
+            Ember.run.scheduleOnce('afterRender', dragHelper, 'updateDisplay', event);
+            return true;
         },
 
-        mouseUp: Flame.State.gotoHandler('idle'),
+        mouseUp: Flame.State.gotoFlameState('idle'),
 
         touchMove: function(event) {
             this.mouseMove(this.normalizeTouchEvents(event));
             return true;
         },
 
-        touchEnd: Flame.State.gotoHandler('idle'),
+        touchEnd: Flame.State.gotoFlameState('idle'),
 
         // Start reorder drag operation
         enterState: function() {
@@ -5135,6 +5549,11 @@ Flame.ListView = Flame.CollectionView.extend(Flame.Statechart, {
         }
     })
 });
+
+})();
+(function() {
+'use strict';
+
 
 
 /**
@@ -5171,6 +5590,7 @@ Flame.LazyListView = Flame.ListView.extend({
 
     _lastScrollHeight: undefined,
     _lastScrollTop: undefined,
+    _recycledViews: null, // set in init
 
     init: function() {
         this._super();
@@ -5191,19 +5611,33 @@ Flame.LazyListView = Flame.ListView.extend({
     /** Do a full rerender of the ListView */
     fullRerender: function() {
         // Recycle any currently rendered views
+        var self = this;
         this.forEachChildView(function(view) {
             if (typeof view.get('contentIndex') !== 'undefined') {
-                this._recycleView(view);
+                self._recycleView(view);
             }
         });
         this.numberOfRowsChanged();
         this.didScroll(this._lastScrollHeight, this._lastScrollTop);
     },
 
-    // Some browsers reset the scroll position when the `block` CSS property has
-    // changed without firing a scroll event.
+    // Some browsers reset the scroll position when the `display` CSS property
+    // has changed without firing a scroll event.
+    didInsertElement: function() {
+        this._updateScrollPosition();
+    },
+
+    // Normally the scroll position is updated in `didInsertElement`, however
+    // the element might be inserted with `display: none` in which case the
+    // height of the visible area is not known.
+    // Therefore we need to again update the scroll position once the view
+    // becomes visible.
     becameVisible: function() {
-        var scrollView = this.nearestInstanceOf(Flame.ScrollView);
+        this._updateScrollPosition();
+    },
+
+    _updateScrollPosition: function() {
+        var scrollView = this.nearestOfType(Flame.ScrollView);
         if (scrollView && scrollView.get('element')) {
             var element = scrollView.get('element');
             this._lastScrollHeight = element.offsetHeight;
@@ -5213,22 +5647,31 @@ Flame.LazyListView = Flame.ListView.extend({
     },
 
     willDestroyElement: function() {
-        this.forEachChildView(function(view) {
+        this.forEach(function(view) {
             if (typeof view.get('contentIndex') !== 'undefined') {
                 this._recycleView(view);
             }
-        });
+        }, this);
     },
 
     numberOfRowsChanged: function() {
-        this.adjustLayout('height', this.numberOfRows() * this.get('itemHeight'));
-        // In case the LazyListView has `useAbsolutePosition` set to false, `adjustLayout` will not work
-        // and we need to set the height manually.
-        this.$().css('height', this.numberOfRows() * this.get('itemHeight') + 'px');
+        Ember.run.scheduleOnce('afterRender', this, this._updateHeight);
+    },
+
+    _updateHeight: function() {
+        var height = this.numberOfRows() * this.get('itemHeight');
+        if (this.get('useAbsolutePosition')) {
+            this.adjustLayout('height', height);
+        } else {
+            // In case the LazyListView has `useAbsolutePosition` set to false, `adjustLayout` will not work
+            // and we need to set the height manually.
+            if (this.$()) this.$().css('height', height + 'px');
+            this.get('layout').height = height;
+        }
     },
 
     numberOfRows: function() {
-        return this.getPath('content.length');
+        return this.get('content.length');
     },
 
     didScroll: function(scrollHeight, scrollTop) {
@@ -5237,7 +5680,9 @@ Flame.LazyListView = Flame.ListView.extend({
 
         var range = this._rowsToRenderRange(scrollHeight, scrollTop);
         var min = range.end, max = range.start;
-        this.forEachChildView(function(view) {
+        var i, childViews = this._childViews, len = childViews.length;
+        for (i = 0; i < len; i++) {
+            var view = childViews[i];
             var contentIndex = view.get('contentIndex');
             if (typeof contentIndex !== 'undefined') {
                 if (contentIndex < range.start || contentIndex > range.end) {
@@ -5248,10 +5693,9 @@ Flame.LazyListView = Flame.ListView.extend({
                     max = Math.max(max, contentIndex);
                 }
             }
-        });
+        }
 
         // Fill up empty gap on top
-        var i;
         if (min === range.end) min++;
         for (i = range.start; i < min; i++) {
             this.viewForRow(i);
@@ -5262,6 +5706,8 @@ Flame.LazyListView = Flame.ListView.extend({
                 this.viewForRow(i);
             }
         }
+
+        this._hideRecycledViews();
     },
 
     /**
@@ -5278,7 +5724,7 @@ Flame.LazyListView = Flame.ListView.extend({
         var length = this.numberOfRows();
         var itemHeight = this.get('itemHeight');
         // Need to know how much the list view is offset from the parent scroll view
-        var offsetFromParent = this.getPath('parentView.element').scrollTop + this.$().position().top;
+        var offsetFromParent = this.get('parentView.element').scrollTop + this.$().position().top;
         var normalizedScrollTop = Math.max(0, scrollTop - offsetFromParent);
         var topRow = ~~(normalizedScrollTop / itemHeight);
         var bufferSize = this.get('bufferSize');
@@ -5319,26 +5765,41 @@ Flame.LazyListView = Flame.ListView.extend({
         var item = this.itemForRow(row);
         var viewClass = this.viewClassForItem(item);
         var itemClass = item.constructor.toString();
-        var view = (this._recycledViews[itemClass] && this._recycledViews[itemClass].pop());
+        var view = this._recycledViews[itemClass] && this._recycledViews[itemClass].pop();
         if (!view) {
             view = this.createChildView(viewClass, jQuery.extend({ useAbsolutePosition: true }, attributes || {}));
-            this.get('childViews').pushObject(view);
+            this.pushObject(view);
         }
-        if (item === this.get('selection')) {
-            view.set('isSelected', true);
-        }
+
+        view.beginPropertyChanges();
+        view.set('isSelected', item === this.get('selection'));
         view.set('content', item);
         view.set('contentIndex', row);
-        view.adjustLayout('top', row * itemHeight);
+        view.layout.top = row * itemHeight;
+        view.propertyDidChange('layout');
         view.set('isVisible', true);
+        view.endPropertyChanges();
+
         return view;
+    },
+
+    _hideRecycledViews: function() {
+        Ember.changeProperties(function() {
+            var views = this._recycledViews;
+            for (var key in views) {
+                var viewArray = views[key];
+                var length = viewArray.length;
+                for (var i = 0; i < length; i++) {
+                    var view = viewArray[i];
+                    if (view.get('isVisible')) view.set('isVisible', false);
+                }
+            }
+        }, this);
     },
 
     /** Prepare a view to be recycled at a later point */
     _recycleView: function(view) {
-        view.set('isVisible', false);
-        view.set('contentIndex', undefined);
-        view.set('isSelected', false);
+        view.setProperties({ contentIndex: undefined, isSelected: false });
         var itemClass = view.get('content').constructor.toString();
         if (!this._recycledViews[itemClass]) this._recycledViews[itemClass] = [];
         this._recycledViews[itemClass].push(view);
@@ -5382,39 +5843,78 @@ Flame.LazyListView = Flame.ListView.extend({
     },
 
     moveItem: function(from, draggingInfo) {
-        throw 'Not implemented yet!';
+        throw new Error('Not implemented yet!');
     },
 
     childViewForIndex: function(index) {
-        return this.get('childViews').findProperty('contentIndex', index);
+        return this.findBy('contentIndex', index);
+    },
+
+    // override this to temporarily disable re-ordering
+    disableReordering: function(event) {
+        return false;
     }
 });
 
+})();
+(function() {
+'use strict';
+
+
 Flame.LazyTreeItemView = Flame.LazyListItemView.extend({
     classNames: ['flame-tree-item-view'],
-    itemContent: '{{content}}',
+    itemContent: '{{view.content}}',
     isExpanded: false,
 
-    collapsedImage: Flame.image('disclosure_triangle_left.png'),
-    expandedImage: Flame.image('disclosure_triangle_down.png'),
+    collapsedImage: Flame.image('disclosure_triangle_right.svg'),
+    expandedImage: Flame.image('disclosure_triangle_down.svg'),
 
     handlebars: function() {
-        return '{{{unbound disclosureImage}}} <span>' + this.get('itemContent') + '</span>';
-    }.property('itemContent').cacheable(),
+        return '{{{view.disclosureImage}}} <span>' + this.get('itemContent') + '</span>';
+    }.property('itemContent'),
 
     isExpandedDidChange: function() {
-        this.$().find('img').first().replaceWith(this.get('disclosureImage'));
+        Ember.run.schedule('afterRender', this, function() {
+            this.$().find('img').first().replaceWith(this.get('disclosureImage'));
+        });
     }.observes('isExpanded'),
 
     isExpandable: function() {
         return this.get('parentView').isExpandable(this.get('content'));
     },
 
+    ensureCorrectLevelClass: function(level) {
+        if (this._indentationLevel === level) return;
+
+        var classNames = this.get('classNames');
+        var levelClass = 'level-' + (level + 1);
+
+        if (this._indentationLevel) {
+            // Remove old level class
+            var oldLevelClass = 'level-' + (this._indentationLevel + 1);
+            classNames.removeObject(oldLevelClass);
+
+            // Updating the classNames array alone is not enough. If the view has already
+            // been inserted in the DOM, we also need to update the element.
+            if (this.get('_state') === 'inDOM') {
+                this.$().removeClass(oldLevelClass);
+            }
+        }
+
+        // Add new level class
+        classNames.pushObject(levelClass);
+        if (this.get('_state') === 'inDOM') {
+            this.$().addClass(levelClass);
+        }
+
+        this._indentationLevel = level;
+    },
+
     disclosureImage: function() {
         var isExpandable = this.isExpandable();
         if (!isExpandable) return '';
         return '<img src="%@">'.fmt(this.get('isExpanded') ? this.get('expandedImage') : this.get('collapsedImage'));
-    }.property('isExpanded', 'content', 'expandedImage', 'collapsedImage').cacheable(),
+    }.property('isExpanded', 'content', 'expandedImage', 'collapsedImage'),
 
     mouseIsDown: Flame.LazyListViewStates.MouseIsDown.extend({
         mouseUp: function(event) {
@@ -5440,6 +5940,11 @@ Flame.LazyTreeItemView = Flame.LazyListItemView.extend({
     }
 });
 
+})();
+(function() {
+'use strict';
+
+
 
 
 /**
@@ -5448,25 +5953,26 @@ Flame.LazyTreeItemView = Flame.LazyListItemView.extend({
   We keep a number of internal caches to easily map this flat list onto the
   tree we're rendering.
 
-  TODO * `LazyTreeView` currently has the limitation that it does not allow
-         dragging items between different levels.
-
   @class LazyTreeView
   @extends LazyListView
 */
 
 Flame.LazyTreeView = Flame.LazyListView.extend({
-    classNames: 'flame-tree-view flame-lazy-tree-view'.w(),
+    classNames: ['flame-tree-view', 'flame-lazy-tree-view'],
     itemViewClass: Flame.LazyTreeItemView,
+    _rowToItemCache: null,
+    _itemToRowCache: null,
+    _itemToLevelCache: null,
+    _itemToParentCache: null,
+    _expandedItems: null,
+    _numberOfCachedRows: null,
 
     init: function() {
+        this._invalidateRowCache();
+        this._expandedItems = Ember.Set.create();
+        // Call the super-constructor last as Flame.ListView constructor calls #_selectionDidChange() which causes
+        // calls to #_setIsSelectedStatus() that calls #rowForItem() which expects the caches to be set up.
         this._super();
-        this._rowToItemCache = [];
-        this._itemToRowCache = new Hashtable();
-        this._itemToLevelCache = new Hashtable();
-        this._itemToParentCache = new Hashtable();
-        this._expandedItems = [];
-        this._numberOfCachedRows = 0;
     },
 
     numberOfRowsChanged: function() {
@@ -5481,14 +5987,14 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
 
     loadItemIntoCache: function(item, level, parent) {
         this._rowToItemCache[this._numberOfCachedRows] = item;
-        this._itemToRowCache.put(item, this._numberOfCachedRows);
-        this._itemToLevelCache.put(item, level);
-        if (parent) this._itemToParentCache.put(item, parent);
+        this._itemToRowCache.set(item, this._numberOfCachedRows);
+        this._itemToLevelCache.set(item, level);
+        if (parent) this._itemToParentCache.set(item, parent);
 
         this._numberOfCachedRows++;
 
         // If an item is not expanded, we don't care about its children
-        if (this._expandedItems.indexOf(item) === -1) return;
+        if (!this._expandedItems.contains(item)) return;
         // Handle children
         var children = item.get('treeItemChildren');
         if (children) {
@@ -5508,8 +6014,7 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
     },
 
     viewClassForItem: function(item) {
-        var itemViewClasses = this.get('itemViewClasses');
-        return itemViewClasses[item.constructor.toString()];
+        return this.get('itemViewClasses')[item.constructor.toString()];
     },
 
     itemForRow: function(row) {
@@ -5521,36 +6026,25 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
     },
 
     levelForItem: function(item) {
+        if (!item) return -1;
         return this._itemToLevelCache.get(item);
     },
 
     /** The tree view needs to additionally set the correct indentation level */
     viewForRow: function(row) {
         var item = this.itemForRow(row);
-        var isExpanded = this._expandedItems.indexOf(item) !== -1;
+        var isExpanded = this._expandedItems.contains(item);
         var view = this._super(row, { isExpanded: isExpanded });
         view.set('isExpanded', isExpanded);
-        var classNames = view.get('classNames');
-        var level = 'level-' + (this._itemToLevelCache.get(item) + 1);
-        // Check if we already have the correct indentation level
-        if (classNames.indexOf(level) === -1) {
-            // Remove old indentation level
-            classNames.forEach(function(className) {
-                if (/^level/.test(className)) {
-                    classNames.removeObject(className);
-                }
-            });
-            // Set correct indentation level
-            classNames.pushObject(level);
-        }
+        view.ensureCorrectLevelClass(this.levelForItem(item));
         return view;
     },
 
     _invalidateRowCache: function() {
         this._rowToItemCache = [];
-        if (this._itemToRowCache) this._itemToRowCache.clear();
-        if (this._itemToLevelCache) this._itemToLevelCache.clear();
-        if (this._itemToParentCache) this._itemToParentCache.clear();
+        this._itemToRowCache = Ember.Map.create();
+        this._itemToLevelCache = Ember.Map.create();
+        this._itemToParentCache = Ember.Map.create();
         this._numberOfCachedRows = 0;
     },
 
@@ -5558,13 +6052,28 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
         return true;
     },
 
+    collapseItem: function(item) {
+        this.changeIsExpanded(item, false);
+    },
+
     expandItem: function(item) {
-        this._expandedItems.pushObject(item);
+        this.changeIsExpanded(item, true);
+    },
+
+    changeIsExpanded: function(item, status) {
+        if (status) {
+            this._expandedItems.add(item);
+        } else {
+            this._expandedItems.remove(item);
+        }
+
         var row = this.rowForItem(item);
         var view = this.childViewForIndex(row);
         if (view && !view.get('isExpanded')) {
-            view.set('isExpanded', true);
-            this.toggleItem(view);
+            view.set('isExpanded', status);
+            if (status) {
+                this.toggleItem(view);
+            }
         }
     },
 
@@ -5582,29 +6091,28 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
 
       @param view {Flame.LazyListItemView} The view that was clicked to expand or collapse the item
     */
-    toggleItem: function(view) {
-        var item = view.get('content');
-        var isExpanded = view.get('isExpanded');
+    toggleItem: function(toggledView) {
+        var item = toggledView.get('content');
+        var isExpanded = toggledView.get('isExpanded');
         if (isExpanded) {
-            this._expandedItems.pushObject(item);
+            this._expandedItems.add(item);
         } else {
-            this._expandedItems.removeObject(item);
+            this._expandedItems.remove(item);
         }
         this.numberOfRowsChanged();
 
         // Update rendering
-        var toRemove = [];
         var indices = [];
         var range = this._rowsToRenderRange(this._lastScrollHeight, this._lastScrollTop);
-        this.forEachChildView(function(view) {
+        this.forEach(function(view) {
             var contentIndex = view.get('contentIndex');
             var content = view.get('content');
             var row = this.rowForItem(content);
-            if (row === null) {
-                toRemove.push(view);
+            if (typeof row === 'undefined' && typeof contentIndex !== 'undefined') {
+                this._recycleView(view);
             } else if (typeof contentIndex !== 'undefined') {
                 indices.push(row);
-                if (contentIndex != row) {
+                if (contentIndex !== row) {
                     view.set('contentIndex', row);
                     var itemHeight = this.itemHeightForRow(row);
                     view.$().css('top', row * itemHeight + 'px');
@@ -5613,19 +6121,15 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
                     this._recycleView(view);
                 }
             }
-        });
-
-        // Remove views that were used to render a subtree that is now collapsed
-        toRemove.forEach(function(view) { view.destroy(); });
+        }, this);
 
         // Render missing views
         for (var i = range.start; i <= range.end; i++) {
             if (indices.indexOf(i) === -1) {
-                view = this.viewForRow(i);
-                var itemHeight = this.itemHeightForRow(i);
-                view.adjustLayout('top', i * itemHeight);
+                this.viewForRow(i);
             }
         }
+        this._hideRecycledViews();
     },
 
     moveRight: function() {
@@ -5653,10 +6157,10 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
                 }
             } else {
                 // The view is currently not visible, just record the status
-                if (this._expandedItems.indexOf(selection) === -1) {
-                    this._expandedItems.pushObject(selection);
+                if (this._expandedItems.contains(selection)) {
+                    this._expandedItems.remove(selection);
                 } else {
-                    this._expandedItems.removeObject(selection);
+                    this._expandedItems.add(selection);
                 }
                 return true;
             }
@@ -5664,67 +6168,83 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
         return false;
     },
 
-    closestCommonAncestor: function(item1, item2) {
-        var ancestor = this._itemToParentCache.get(item1);
-        var parent = this._itemToParentCache.get(item2);
-        while (parent) {
-            if (parent === ancestor) {
-                return parent;
-            } else {
-                parent = this._itemToParentCache.get(parent);
-            }
-        }
+    isValidDrop: function(item, parent) {
+        return true;
     },
 
-    isValidDrop: function(item, dropParent) {
-        return true;
+    getAncestors: function(item) {
+        var ancestors = [item];
+        var parent = this._itemToParentCache.get(item);
+        while (parent) {
+            ancestors.push(parent);
+            parent = this._itemToParentCache.get(parent);
+        }
+        ancestors.push(null);
+        return ancestors;
     },
 
     /**
       @param {Object} draggingInfo
       @param {Number} proposedIndex
       @param {Number} originalIndex
-    */
-    indexForMovedItem: function(draggingInfo, proposedIndex, originalIndex) {
-        // Get items of interest
-        var itemFrom = this.itemForRow(originalIndex);
-        var itemAbove = this.itemForRow(proposedIndex - 1);
-        var itemBelow = this.itemForRow(proposedIndex);
 
+      @return draggingInfo
+    */
+    indexForMovedItem: function(draggingInfo, proposedIndex, originalIndex, newLeft) {
         // Bounds checking
         if (proposedIndex < 0) proposedIndex = 0;
         if (proposedIndex > this.numberOfRows()) proposedIndex = this.numberOfRows();
 
-        // Only allow moving between the same level
-        var itemLevel = this.levelForItem(itemFrom);
-        var acceptedIndex,
-            toParent,
-            toPosition;
-        if (itemBelow && this.levelForItem(itemBelow) === itemLevel) {
-            acceptedIndex = proposedIndex;
-            toParent = this._itemToParentCache.get(itemBelow);
-            toPosition = (toParent && toParent.get('treeItemChildren') || this.get('content')).indexOf(itemBelow);
-        } else if (itemAbove && this.levelForItem(itemAbove) === itemLevel && this._expandedItems.indexOf(itemAbove) === -1) {
-            acceptedIndex = proposedIndex;
-            toParent = this._itemToParentCache.get(itemAbove);
-            toPosition = toParent ? toParent.getPath('treeItemChildren.length') : this.getPath('content.length');
-        } else if ((!itemBelow || (itemBelow && this.levelForItem(itemBelow) < itemLevel)) &&
-                   itemAbove && this.levelForItem(itemAbove) > itemLevel) {
-            acceptedIndex = proposedIndex;
-            toParent = this.closestCommonAncestor(itemFrom, itemAbove);
-            toPosition = toParent ? toParent.getPath('treeItemChildren.length') : this.getPath('content.length');
-        } else if (itemAbove && itemLevel - 1 === this.levelForItem(itemAbove) && this._expandedItems.indexOf(itemAbove) !== -1) {
-            // Dragging into parent item that is currently empty and open
-            acceptedIndex = proposedIndex;
-            toParent = itemAbove;
-            toPosition = 0;
+        // Get items of interest
+        var movedItem = this.itemForRow(originalIndex);
+        var itemAbove = this.itemForRow(proposedIndex - 1);
+        var itemBelow = this.itemForRow(proposedIndex);
+
+        // Get the closest parent for the given position
+        var closestParent = null;
+        if (this._expandedItems.contains(itemAbove)) {
+            closestParent = itemAbove;
         } else {
-            return draggingInfo;
+            for (var i = proposedIndex - 1; i >= 0; i--) {
+                var item = this.itemForRow(i);
+                if (this.levelForItem(item) >= this.levelForItem(itemAbove)) continue;
+                if (this._expandedItems.contains(item)) {
+                    closestParent = item;
+                    break;
+                }
+            }
         }
 
-        if (!this.isValidDrop(itemFrom, toParent)) return draggingInfo;
+        var possibleParents = this.getAncestors(closestParent).filter(function(parent) {
+            return this.levelForItem(parent) + 1 - this.levelForItem(itemBelow) >= 0 && this.isValidDrop(movedItem, parent);
+        }, this);
 
-        return  { currentIndex: acceptedIndex, toParent: toParent, toPosition: toPosition };
+        if (possibleParents.length === 0) return draggingInfo;
+
+        var itemLevel = this.levelForItem(movedItem);
+        var changeLevel = ~~(newLeft / 22); // 22 pixels per level of indentation
+        var intendedLevel = itemLevel + changeLevel;
+
+        var intendedParent = null;
+        possibleParents.forEach(function(parent) {
+            if (!intendedParent || Math.abs(this.levelForItem(parent) - intendedLevel) < Math.abs(this.levelForItem(intendedParent) - intendedLevel)) {
+                intendedParent = parent;
+            }
+        }, this);
+
+        var position = null;
+        if (!intendedParent) {
+            position = itemBelow ? this.get('content').indexOf(itemBelow) : this.get('content.length');
+        } else if (itemBelow && this.levelForItem(itemBelow) === this.levelForItem(intendedParent) + 1) {
+            // The item below belongs to the same parent as the item we're dragging
+            position = intendedParent.get('treeItemChildren').indexOf(itemBelow);
+        } else {
+            // The item is the last item in the parent
+            position = intendedParent.get('treeItemChildren.length');
+        }
+
+        var parentLevel = this.levelForItem(intendedParent);
+        return { currentIndex: proposedIndex, toParent: intendedParent, toPosition: position, level: parentLevel + 1 };
     },
 
     moveItem: function(from, draggingInfo) {
@@ -5737,17 +6257,18 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
             if (contentIndex > from && contentIndex < to ||
                 contentIndex < from && contentIndex >= to) {
                 view.set('contentIndex', contentIndex + direction);
-                view.$().animate({top: view.get('contentIndex') * itemHeight + 'px'});
+                view.$().css('top', view.get('contentIndex') * itemHeight);
             }
         });
         if (direction < 0) to--;
         movedView.set('contentIndex', to);
-        movedView.$().animate({top: to * itemHeight + 'px'});
+        movedView.ensureCorrectLevelClass(draggingInfo.level);
+        movedView.$().css('top', to * itemHeight);
 
         if (direction < 0) to++;
         var fromItem = this.itemForRow(from);
         var fromParent = this._itemToParentCache.get(fromItem);
-        var toParent = draggingInfo.toParent || fromParent;
+        var toParent = draggingInfo.toParent;
 
         var fromContent = fromParent ? fromParent.get('treeItemChildren') : this.get('content');
         var toContent = toParent ? toParent.get('treeItemChildren') : this.get('content');
@@ -5763,18 +6284,27 @@ Flame.LazyTreeView = Flame.LazyListView.extend({
         });
 
         var delegate = this.get('reorderDelegate');
-        if (delegate) {
+        if (delegate && delegate.didReorderContent) {
             Ember.run.next(this, function() {
-                delegate.didReorderContent(toContent);
+                delegate.didReorderContent(fromItem, toContent);
             });
         }
     }
 });
+
+})();
+(function() {
+'use strict';
+
 Flame.LoadingIndicatorView = Flame.ImageView.extend({
     layout: { width: 16, height: 16 },
     classNames: ['loading-indicator'],
     value: Flame.image('loading.gif')
 });
+
+})();
+(function() {
+'use strict';
 
 /**
   Flame.Popover provides a means to display a popup in the context of an existing element in the UI.
@@ -5784,10 +6314,14 @@ Flame.Popover = Flame.Panel.extend({
     classNames: ['flame-popover'],
     childViews: [],
     dimBackground: false,
-    arrow: 'arrow', // How to use a string literal in bindAttr?
-    handlebars: '<img {{bindAttr class="arrowPosition arrow"}} {{bindAttr src="image"}} />{{view contentView}}',
+    handlebars: '<img {{bind-attr class="view.arrowPosition :arrow"}} {{bind-attr src="view.image"}}>{{view view.contentView}}',
     anchor: null,
     position: null,
+
+    ARROW_UP: Flame.image('arrow_up.png'),
+    ARROW_DOWN: Flame.image('arrow_down.png'),
+    ARROW_LEFT: Flame.image('arrow_left.png'),
+    ARROW_RIGHT: Flame.image('arrow_right.png'),
 
     _positionArrow: function() {
         var anchor = this.get('anchor');
@@ -5795,20 +6329,23 @@ Flame.Popover = Flame.Panel.extend({
         var arrow = this.$('img.arrow');
         var offset = anchor.offset();
         var arrowOffset;
+
+        var dimensions = this._getDimensionsForAnchorElement(anchor);
+
         if (position & (Flame.POSITION_ABOVE | Flame.POSITION_BELOW)) {
-            arrowOffset = offset.left + (anchor.outerWidth() / 2) - (!this.$().css('left') ? 0 : parseInt(this.$().css('left').replace('px', ''), 10)) - 15;
+            arrowOffset = offset.left + (dimensions.width / 2) - (!this.$().css('left') ? 0 : parseInt(this.$().css('left').replace('px', ''), 10)) - 15;
             arrow.css({ left: arrowOffset + 'px' });
             if (position & Flame.POSITION_ABOVE) {
-                arrow.css({ top: this.getPath('layout.height') - 1 + 'px' });
+                arrow.css({ top: this.get('layout.height') - 1 + 'px' });
             }
         } else {
-            arrowOffset = offset.top + (anchor.outerHeight() / 2) - parseInt(this.$().css('top').replace('px', ''), 10) - 15;
+            arrowOffset = offset.top + (dimensions.height / 2) - parseInt(this.$().css('top').replace('px', ''), 10) - 15;
             arrow.css({ top: arrowOffset + 'px' });
             if (position & Flame.POSITION_LEFT) {
-                arrow.css({ left: this.getPath('layout.width') - 1 + 'px' });
+                arrow.css({ left: this.get('layout.width') - 1 + 'px' });
             }
         }
-    },
+    }.on('didInsertElement'),
 
     _layoutRelativeTo: function(anchor, position) {
         anchor = anchor instanceof jQuery ? anchor : anchor.$();
@@ -5827,25 +6364,21 @@ Flame.Popover = Flame.Panel.extend({
         if (position & Flame.POSITION_ABOVE) {
             layout.top -= 15;
             this.set('arrowPosition', 'above');
-            this.set('image', Flame.image('arrow_down.png'));
+            this.set('image', this.ARROW_DOWN);
         } else if (position & Flame.POSITION_BELOW) {
             layout.top += 15;
             this.set('arrowPosition', 'below');
-            this.set('image', Flame.image('arrow_up.png'));
+            this.set('image', this.ARROW_UP);
         } else if (position & Flame.POSITION_LEFT) {
             layout.left -= 15;
             this.set('arrowPosition', 'left');
-            this.set('image', Flame.image('arrow_right.png'));
+            this.set('image', this.ARROW_RIGHT);
         } else if (position & Flame.POSITION_RIGHT) {
             layout.left += 15;
             this.set('arrowPosition', 'right');
-            this.set('image', Flame.image('arrow_left.png'));
+            this.set('image', this.ARROW_LEFT);
         }
         return layout;
-    },
-
-    didInsertElement: function() {
-        this._positionArrow();
     },
 
     popup: function(anchor, position) {
@@ -5854,14 +6387,22 @@ Flame.Popover = Flame.Panel.extend({
         this._super(anchor, position | Flame.POSITION_MIDDLE);
     }
 });
+
+})();
+(function() {
+'use strict';
+
 Flame.ProgressView = Flame.View.extend({
     classNames: ['flame-progress-view'],
+
+    value: null,
+    maximum: null,
     animate: false,
 
     handlebars: function() {
         var height = this.get('layout').height;
         return "<div style='height: %@px;' class='progress-container'></div><div style='height: %@px; width: %@px;' class='progress-bar'></div>".fmt(height - 2, height - 4, this.get('size'));
-    }.property().cacheable(),
+    }.property(),
 
     size: function() {
         var progress = this.get('value') / this.get('maximum');
@@ -5874,19 +6415,23 @@ Flame.ProgressView = Flame.View.extend({
         }
     }.property('value', 'maximum'),
 
-    _sizeDidChange: function() {
-        // In CubeTableLoadingView, the progress views are rendered before the value & maximum bindings have synchronized,
-        // which means the handlebars template uses width 0. Then they synchronize _before_ the element is added to DOM,
-        // which means $(...) doesn't work yet. Defer updating to next runloop.
-        Ember.run.next(this, function() {
-            if (this.get('animate')) {
-                this.$('.progress-bar').animate({ width: this.get('size') }, 300);
-            } else {
-                this.$('.progress-bar').css('width', this.get('size'));
+    sizeDidChange: function() {
+        Ember.run.schedule('afterRender', this, function() {
+            if (this.get('_state') === 'inDOM') {
+                if (this.get('animate')) {
+                    this.$('.progress-bar').animate({width: this.get('size')}, 300);
+                } else {
+                    this.$('.progress-bar').css('width', this.get('size'));
+                }
             }
         });
     }.observes('size')
 });
+
+})();
+(function() {
+'use strict';
+
 Flame.RadioButtonView = Flame.CheckboxView.extend({
     classNames: ['flame-radio-button-view'],
 
@@ -5894,17 +6439,22 @@ Flame.RadioButtonView = Flame.CheckboxView.extend({
         this.set('targetValue', this.get('value'));
     },
 
-    isSelected: function() {
+    isSelected: function(key, value) {
         if (Ember.typeOf(this.get('value')) === 'undefined' || Ember.typeOf(this.get('targetValue')) === 'undefined') {
             return false;
         }
         return this.get('value') === this.get('targetValue');
-    }.property('targetValue', 'value').cacheable(),
+    }.property('targetValue', 'value'),
 
-    renderCheckMark: function(context) {
-        context.push("<div class='flame-view flame-checkbox-checkmark' style='top:8px;left:8px;width:6px;height:6px;'></div>");
+    renderCheckMark: function(buffer) {
+        buffer.push('<div class="flame-view flame-checkbox-checkmark" style="top:8px;left:8px;width:6px;height:6px;"></div>');
     }
 });
+
+})();
+(function() {
+'use strict';
+
 /**
   Flame.ScrollView provides a scrollable container. In the DOM this is just a div
   with `overflow: auto`.
@@ -5920,69 +6470,101 @@ Flame.RadioButtonView = Flame.CheckboxView.extend({
 */
 
 Flame.ScrollView = Flame.View.extend({
-    classNames: 'scroll-view'.w(),
+    classNames: ['scroll-view'],
     /** Last known vertical scroll offset */
     lastScrollY: 0,
     /** Is the ScrollView currently being scrolled? */
     isScrolling: false,
 
     didInsertElement: function() {
-        this._super();
-        this.$().scroll(jQuery.proxy(this.didScroll, this));
+        this.$().on('scroll', jQuery.proxy(this.didScroll, this));
         this._update();
     },
 
+    willDestroyElement: function() {
+        this.$().off('scroll');
+    },
+
     didScroll: function(event) {
-        this.set('lastScrollY', this.get('element').scrollTop);
-        if (!this.get('isScrolling')) {
+        this.lastScrollY = this.get('element').scrollTop;
+        if (!this.isScrolling) {
             requestAnimationFrame(jQuery.proxy(this._update, this));
         }
-        this.set('isScrolling', true);
+        this.isScrolling = true;
     },
 
     _update: function() {
         var height = this.get('element').offsetHeight;
-        var scrollTop = this.get('lastScrollY');
-        this.set('isScrolling', false);
+        var scrollTop = this.lastScrollY;
+        this.isScrolling = false;
         // Notify childViews the scrollview has scrolled
-        this.forEachChildView(function(view) {
+        var i, childViews = this._childViews, len = childViews.length;
+        for (i = 0; i < len; i++) {
+            var view = childViews[i];
             if (view.didScroll) view.didScroll(height, scrollTop);
-        });
+        }
     }
 });
 
+})();
+(function() {
+'use strict';
+
+
 Flame.SearchTextFieldView = Flame.TextFieldView.extend({
     classNames: ['flame-search-field'],
+    childViews: ['textField', 'clearButton'],
+
+    clearButton: Flame.ButtonView.extend({
+        resetClassNames: true,
+        layout: { right: 5, top: 2 },
+        isVisible: Ember.computed.bool('parentView.value'),
+        handlebars: '<img src="/assets/images/search_clear.svg">',
+
+        action: function() {
+            this.get('parentView').cancel();
+        }
+    }),
 
     cancel: function() {
-        if (Ember.empty(this.get('value'))) {
+        if (Ember.isEmpty(this.get('value'))) {
             // Nothing to clear, we don't handle the event
             return false;
         } else {
-            // I don't know why, but for this to work in Firefox we need to run
-            // it in the next run loop.
-            Ember.run.next(this, function() {
-                this.set('value', '');
-            });
+            this.set('value', '');
             return true;
         }
     }
 });
+
+})();
+(function() {
+'use strict';
 
 
 Flame.StackItemView = Flame.ListItemView.extend({
     useAbsolutePosition: true,
     classNames: ['flame-stack-item-view']
 });
+
+})();
+(function() {
+'use strict';
+
 // Stack view is a list view that grows with the content and uses absolute positioning for the child views.
 // Use class StackItemView as the superclass for the item views.
 Flame.StackView = Flame.ListView.extend({
     layoutManager: Flame.VerticalStackLayoutManager.create({ topMargin: 0, spacing: 0, bottomMargin: 0 }),
     allowSelection: false
 });
+
+})();
+(function() {
+'use strict';
+
 Flame.TabView = Flame.View.extend({
     classNames: ['flame-tab-view'],
-    childViews: 'tabBarView contentView'.w(),
+    childViews: ['tabBarView', 'contentView'],
     tabs: null,
     previousTabs: null,
     nowShowing: null,
@@ -5991,31 +6573,31 @@ Flame.TabView = Flame.View.extend({
 
     init: function() {
         this._super();
-        //if tabs not set via binding, we need to build the tabs here
-        if (!Ember.none(this.get('tabs'))) {
+        // if tabs not set via binding, we need to build the tabs here
+        if (!Ember.isNone(this.get('tabs'))) {
             this._tabsDidChange();
         }
     },
 
     _tabsWillChange: function() {
         var tabs = this.get('tabs');
-        if (!Ember.none(tabs)) {
+        if (!Ember.isNone(tabs)) {
             this.set('previousTabs', tabs.slice());
         }
-    }.observesBefore('tabs.@each'),
+    }.observesBefore('tabs.[]'),
 
     _tabsDidChange: function() {
         var tabs = this.get('tabs');
-        if (Ember.none(tabs)) {
+        if (Ember.isNone(tabs)) {
             return;
         }
         var previousTabs = this.get('previousTabs');
 
-        if (!Ember.none(previousTabs)) {
+        if (!Ember.isNone(previousTabs)) {
             previousTabs.forEach(function(tab, i) {
-                if (Ember.none(tabs.findProperty('value', tab.value))) {
+                if (Ember.isNone(tabs.findBy('value', tab.value))) {
                     var tabBarView = this.get('tabBarView');
-                    tabBarView.get('childViews').forEach(function(tabView) {
+                    tabBarView.forEach(function(tabView) {
                         if (tabView.get('value') === tab.value) tabBarView.removeChild(tabView);
                     });
                 }
@@ -6023,42 +6605,50 @@ Flame.TabView = Flame.View.extend({
         }
 
         tabs.forEach(function(tab, i) {
-            if (Ember.none(previousTabs) || Ember.none(previousTabs.findProperty('value', tab.value))) {
+            if (Ember.isNone(previousTabs) || Ember.isNone(previousTabs.findBy('value', tab.value))) {
                 this._addTab(tab, i);
             }
         }, this);
-    }.observes('tabs.@each'),
+    }.observes('tabs.[]'),
 
     _addTab: function(tab, index) {
-          var contentView = this.get('contentView');
-          var contentViewChildren = contentView.get('childViews');
-          var tabBarView = this.get('tabBarView');
-          var tabBarViewChildren = tabBarView.get('childViews');
-          var tabsHeight = this.get('tabsHeight');
-          var self = this;
-          tabBarViewChildren.insertAt(index, tabBarView.createChildView(Flame.ButtonView.create({
-              acceptsKeyResponder: false,
-              layout: { top: 0, bottom: 0, height: tabsHeight },
-              title: tab.title,
-              value: tab.value,
-              isSelected: Flame.computed.equals('parentView.parentView.nowShowing', tab.value),
-              action: function() {
-                  self.set('nowShowing', tab.value);
-              }
-          })));
-          var view = self.get(tab.value);
-          Ember.assert('View for tab %@ not defined!'.fmt(tab.value), !!view);
-          if (!self.get('initializeTabsLazily')) {
-              if (!(view instanceof Ember.View)) {
-                  view = contentView.createChildView(view);
-              }
-              view.set('isVisible', false);
-              contentViewChildren.addObject(view);
-              self.set(tab.value, view);
-          }
+        var contentView = this.get('contentView');
+        var tabBarView = this.get('tabBarView');
+        var tabsHeight = this.get('tabsHeight');
+        var self = this;
 
-          if (Ember.none(this.get('nowShowing'))) this.set('nowShowing', this.get('tabs').objectAt(0).value);
-      },
+        var buttonConfig = {
+            acceptsKeyResponder: false,
+            layout: { top: 0, bottom: 0, height: tabsHeight },
+            title: tab.title,
+            value: tab.value,
+            tabView: this,
+            isSelected: Ember.computed.equal('parentView.parentView.nowShowing', tab.value),
+            action: function() {
+                self.set('nowShowing', tab.value);
+            }
+        };
+
+        if (tab.tabClass) {
+            buttonConfig.classNameBindings = ['tabView.%@.%@'.fmt(tab.value, tab.tabClass)];
+        }
+
+        tabBarView.insertAt(index, tabBarView.createChildView(Flame.ButtonView.createWithMixins(buttonConfig)));
+
+        var view = this.get(tab.value);
+        Ember.assert('View for tab %@ not defined!'.fmt(tab.value), !!view);
+
+        if (!this.get('initializeTabsLazily')) {
+            if (!(view instanceof Ember.View)) {
+                view = contentView.createChildView(view);
+            }
+            view.set('isVisible', false);
+            contentView.pushObject(view);
+            this.set(tab.value, view);
+        }
+
+        if (Ember.isNone(this.get('nowShowing'))) this.set('nowShowing', this.get('tabs').objectAt(0).value);
+    },
 
     _tabWillChange: function() {
         if (this.get('nowShowing')) {
@@ -6073,12 +6663,12 @@ Flame.TabView = Flame.View.extend({
             if (!(view instanceof Ember.View)) {
                 var contentView = this.get('contentView');
                 view = contentView.createChildView(view);
-                contentView.get('childViews').addObject(view);
+                contentView.pushObject(view);
                 this.set(nowShowing, view);
             }
             view.set('isVisible', true);
         }
-    }.observes('nowShowing'),
+    }.observes('nowShowing').on('init'),
 
     tabBarView: Flame.View.extend({
         classNames: ['flame-tab-view-tabs'],
@@ -6089,8 +6679,14 @@ Flame.TabView = Flame.View.extend({
         classNames: ['flame-tab-view-content'],
         layout: { left: 0, top: 'parentView.tabsHeight', right: 0, bottom: 0 }
     })
-
 });
+
+})();
+(function() {
+'use strict';
+
+var isWebKit = /webkit/i.test(window.navigator.userAgent);
+
 Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
     classNames: ['flame-table-data-view'],
     acceptsKeyResponder: true,
@@ -6098,58 +6694,289 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
     updateBatchSize: 500,
     _updateCounter: 0,
     selectedCell: null,
+    selectionEnd: null,
     editValue: null,
-    contentBinding: '^content',
+    content: null,
+    tableViewDelegate: null,
 
-    initialState: 'loaded',
+    initialFlameState: 'loaded',
 
     loaded: Flame.State.extend({
         mouseDown: function(event) {
             var owner = this.get('owner');
-            if (owner.selectCell(owner._cellForTarget(event.target))) {
-                this.gotoState('selected');
+            if (owner.selectCell(owner._cellForTarget(event.target), false)) {
+                owner.get('selection').show();
+                this.gotoFlameState('mouseIsDown');
                 return true;
-            } else { return false; }
+            } else {
+                return false;
+            }
         },
 
         enterState: function() {
-            if (this.getPath('owner.state') === 'inDOM') {
-                this.getPath('owner.selection').hide();
+            var owner = this.get('owner');
+            owner.set('selectedCell', null);
+            owner.set('selectionEnd', null);
+            if (owner.get('_state') === 'inDOM') {
+                owner.get('selection').children().addBack().hide();
             }
         }
     }),
 
+    mouseIsDown: Flame.State.extend({
+        lastTarget: null,
+
+        mouseMove: function(event) {
+            if (event.target !== this.lastTarget) {
+                var owner = this.get('owner');
+                var cell = owner._cellForTarget(event.target);
+                if (cell && owner.isCellSelectable(cell)) {
+                    owner.set('selectionEnd', cell);
+                }
+                this.lastTarget = event.target;
+            }
+            return true;
+        },
+
+        mouseUp: function(event) {
+            this.gotoFlameState('selected');
+            return this.get('owner').invokeStateMethod('mouseUp', event);
+        }
+    }),
+
     selected: Flame.State.extend({
+        cellUp: function(cell) {
+            return jQuery(cell.parent().prev().children()[cell.attr('data-index')]);
+        },
+
+        cellDown: function(cell) {
+            return jQuery(cell.parent().next().children()[cell.attr('data-index')]);
+        },
+
+        modifySelection: function(cell) {
+            var owner = this.get('owner');
+            if (owner.isCellSelectable(cell)) {
+                owner.set('selectionEnd', cell);
+                owner.notifySelectionChange();
+                return true;
+            }
+            return false;
+        },
+
+        _trim: function(value) {
+            // Trim value to allow correct pasting behavior to cells (normalize line changes, strip leading/trailing whitespace, but preserve tabs)
+            value = value.replace(/\r\n|\r/g, '\n');
+            value = value.replace(/^[^\S\t]+|[^\S\t]+$/g, '');
+            return value;
+        },
+
+        pasteValue: function(value) {
+            value = this._trim(value);
+            var owner = this.get('owner');
+            var data = owner.get('data');
+            var selectedCell = this.get('owner.selectedCell');
+            var rowIndex = owner.rowIndex(selectedCell);
+            var columnIndex = owner.columnIndex(selectedCell);
+
+            var pasteFailed = function(pastedValue) {
+                var tableViewDelegate = owner.get('tableViewDelegate');
+                if (tableViewDelegate && tableViewDelegate.pasteDidFail) tableViewDelegate.pasteDidFail(pastedValue);
+            };
+
+            // If only one value is in the clipboard and a range is selected,
+            // copy that value to all selected cells.
+            if (!/\n|\t/.test(value) && selectedCell !== this.get('owner.selectionEnd')) {
+                this._forEachSelectedCell(function(i, j, dataCell) {
+                    if (dataCell && dataCell.isEditable() && dataCell.isPastable()) {
+                        var cell = owner.$('tr[data-index=%@]'.fmt(i)).find('td[data-index=%@]'.fmt(j)).first();
+                        if (!owner._validateAndSet(value, cell)) pasteFailed(value);
+                    }
+                });
+                return;
+            }
+
+            var rows = selectedCell.parent().add(selectedCell.parent().nextAll());
+            value.split('\n').forEach(function(line, i) {
+                line.split('\t').forEach(function(field, j) {
+                    var cell = rows[i] && rows.eq(i).children().eq(columnIndex + j);
+                    if (!cell) return;
+                    var dataCell = data[rowIndex + i][columnIndex + j];
+                    if (dataCell && dataCell.isEditable() && dataCell.isPastable()) {
+                        if (dataCell.options()) {
+                            var option = dataCell.options().findBy('title', field);
+                            if (!option) {
+                                pasteFailed(field);
+                                return;
+                            }
+                            field = option.value;
+                        }
+                        if (!owner._validateAndSet(field, cell)) pasteFailed(field);
+                    }
+                });
+            });
+        },
+
+        /**
+          For the current selection, get a value that can be pasted to another
+          TableView or spreadsheet.
+        */
+        valueForCopy: function() {
+            var value = [];
+            var row;
+            this._forEachSelectedCell(function(i, j, cell, newLine) {
+                if (newLine) {
+                    if (!Ember.isEmpty(row)) value.push(row.join('\t'));
+                    row = [];
+                }
+                row.push(cell && cell.isCopyable() ? cell.editableValue() : '');
+            });
+            if (!Ember.isEmpty(row)) value.push(row.join('\t'));
+            return value.join('\n');
+        },
+
+        _forEachSelectedCell: function(callback) {
+            var owner = this.get('owner');
+            var selectedCell = owner.get('selectedCell');
+            var selectionEnd = owner.get('selectionEnd');
+            var minRow = Math.min(owner.rowIndex(selectedCell), owner.rowIndex(selectionEnd));
+            var maxRow = Math.max(owner.rowIndex(selectedCell), owner.rowIndex(selectionEnd));
+            var minCol = Math.min(owner.columnIndex(selectedCell), owner.columnIndex(selectionEnd));
+            var maxCol = Math.max(owner.columnIndex(selectedCell), owner.columnIndex(selectionEnd));
+
+            var data = owner.get('data');
+            for (var i = minRow; i <= maxRow; i++) {
+                var newLine = true;
+                for (var j = minCol; j <= maxCol; j++) {
+                    callback(i, j, data[i][j], newLine);
+                    newLine = false;
+                }
+            }
+        },
+
+        _getCellUnderSelection: function(event) {
+            var owner = this.get('owner');
+            owner.get('selection').hide();
+            var cell = document.elementFromPoint(event.clientX, event.clientY);
+            owner.get('selection').show();
+            return cell;
+        },
+
         mouseDown: function(event) {
             var owner = this.get('owner');
+            // For browsers that don't support pointer-events, clicking the selection div
+            // will absorb the mouseDown event.
+            if (jQuery(event.target).hasClass('table-selection')) {
+                event.target = this._getCellUnderSelection(event);
+            }
+
             // If a cell is clicked that was already selected and it's a cell
             // with fixed options, start editing it.
+            var $target = jQuery(event.target);
             var selectedDataCell = owner.get('selectedDataCell');
-            if (jQuery(event.target).hasClass('table-selection-background') && selectedDataCell.options && selectedDataCell.options()) {
+            if (!Ember.isNone(selectedDataCell) &&
+                    selectedDataCell.options && selectedDataCell.options() &&
+                    $target.is('td') &&
+                    owner._cellForTarget(event.target)[0] === owner.get('selectedCell')[0]) {
                 this.startEdit();
                 return true;
             }
 
             var target = owner._cellForTarget(event.target);
-            return !!owner.selectCell(target);
+            if (event.shiftKey && owner.isCellSelectable(target)) {
+                owner.set('selectionEnd', target);
+                return true;
+            } else if ($target.closest('.table-selection').length) {
+                // If an element inside of the selection div was clicked, we
+                // let the delegate handle the click in mouseUp.
+                return true;
+            } else {
+                this.gotoFlameState('loaded');
+                return owner.invokeStateMethod('mouseDown', event);
+            }
         },
 
         mouseUp: function(event) {
-            var tableViewDelegate = this.getPath('owner.tableViewDelegate');
+            var tableViewDelegate = this.get('owner.tableViewDelegate');
             if (tableViewDelegate && tableViewDelegate.mouseUp) {
-                var target = jQuery(event.target);
-                var targetDataCell;
-                var index;
-                var columnIndexCell = target.closest('[data-index]');
-                var columnIndex = columnIndexCell.attr('data-index');
-                var rowIndex = columnIndexCell.parent().attr('data-index');
+                var $target = jQuery(event.target);
+                // Fallback for browsers that don't support pointer-events
+                if ($target.hasClass('table-selection')) {
+                    event.target = this._getCellUnderSelection(event);
+                    $target = jQuery(event.target);
+                }
+
+                // Did we click on the cell or on an element inside the table selection?
+                var cell = $target.is('td') ? $target : jQuery(this._getCellUnderSelection(event));
+                var columnIndex = cell.attr('data-index');
+                var rowIndex = cell.parent().attr('data-index');
 
                 if (columnIndex && rowIndex) {
-                    targetDataCell = this.getPath('owner.data')[rowIndex][columnIndex];
-                    index = [rowIndex, columnIndex];
-                    tableViewDelegate.mouseUp(event, target, targetDataCell, index, this.get('owner'));
+                    var dataCell = this.get('owner.data')[rowIndex][columnIndex];
+                    var index = [rowIndex, columnIndex];
+                    tableViewDelegate.mouseUp(event, cell, dataCell, index, this.get('owner'));
                 }
             }
+        },
+
+        keyDown: function(event, view) {
+            var owner = this.get('owner');
+            var selectedDataCell = owner.get('selectedDataCell');
+            if ((event.ctrlKey || event.metaKey) && !Ember.isNone(selectedDataCell)) {
+                var position = owner.get('selectedCell').position();
+                var scrollable = owner.get('parentView.scrollable');
+                var $container = owner.$('.clipboard-container');
+                $container.css({ left: position.left + scrollable.scrollLeft(), top: position.top + scrollable.scrollTop() });
+                $container.empty().show();
+                var $textarea = jQuery('<textarea></textarea>')
+                    .val(this.valueForCopy())
+                    .appendTo($container)
+                    .focus()
+                    .select();
+
+                var self = this;
+                $textarea.on('paste', function(e) {
+                    var clipboardData = e.originalEvent.clipboardData || window.clipboardData;
+                    var pastedValue = clipboardData.getData('Text');
+                    // IE11 doesn't allow AJAX requests from the paste event,
+                    // this is how we work around it.
+                    Ember.run.later(self, function() {
+                        this.pasteValue(pastedValue);
+                    }, 100);
+                });
+
+                // Make sure that control/command + <other key> combinations will still be handled by the browser
+                return false;
+            }
+
+            return !owner._handleKeyEvent('keyDown', event, view);
+        },
+
+        keyUp: function(event) {
+            var $target = jQuery(event.target);
+            if ($target.hasClass('clipboard-container textarea')) {
+                $target.off('paste');
+                var $container = this.$('.clipboard-container');
+                $container.empty().hide();
+                return true;
+            }
+            return false;
+        },
+
+        // We need to use the keyPress event, as some browsers don't report the character pressed correctly with keyDown
+        keyPress: function(event) {
+            if (event.ctrlKey || event.metaKey) return false;
+            var dataCell = this.get('owner.selectedDataCell');
+            if (Ember.isNone(dataCell) || !dataCell.isEditable()) {
+                return false;
+            }
+            var key = String.fromCharCode(event.which);
+            if (/[a-zA-Z0-9+*\-\[\/\=]/.test(key)) {
+                var owner = this.get('owner');
+                owner.set('editValue', key);
+                this.startEdit();
+                return true;
+            }
+            return false;
         },
 
         insertNewline: function(event) {
@@ -6163,11 +6990,12 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
 
         deleteForward: function(event) {
             this.wipeCell();
+            return true;
         },
 
         wipeCell: function() {
-            var dataCell = this.getPath('owner.selectedDataCell');
-            if (Ember.none(dataCell)) {
+            var dataCell = this.get('owner.selectedDataCell');
+            if (Ember.isNone(dataCell)) {
                 return;
             }
 
@@ -6181,14 +7009,17 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
         },
 
         startEdit: function(event) {
-            var dataCell = this.getPath('owner.selectedDataCell');
-            if (Ember.none(dataCell)) {
+            var dataCell = this.get('owner.selectedDataCell');
+            if (Ember.isNone(dataCell)) {
                 return;
             }
+            var owner = this.get('owner');
             if (dataCell.isEditable()) {
-                this.gotoState('editing');
+                owner.set('selectionEnd', owner.get('selectedCell'));
+                this.gotoFlameState('editing');
             } else if (!dataCell.options()) {
-                this.gotoState('selectingReadOnly');
+                owner.set('selectionEnd', owner.get('selectedCell'));
+                this.gotoFlameState('selectingReadOnly');
             }
         },
 
@@ -6198,58 +7029,59 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
         },
 
         moveLeft: function(event) {
-            var selectedCell = this.getPath('owner.selectedCell');
-            this.get('owner').selectCell(selectedCell.prev());
+            this.get('owner').selectCell(this.get('owner.selectedCell').prev());
             return true;
+        },
+
+        moveLeftAndModifySelection: function(event) {
+            return this.modifySelection(this.get('owner.selectionEnd').prev());
         },
 
         moveRight: function(event) {
-            var selectedCell = this.getPath('owner.selectedCell');
-            this.get('owner').selectCell(selectedCell.next());
+            this.get('owner').selectCell(this.get('owner.selectedCell').next());
             return true;
+        },
+
+        moveRightAndModifySelection: function(event) {
+            return this.modifySelection(this.get('owner.selectionEnd').next());
         },
 
         moveDown: function(event) {
-            var selectedCell = this.getPath('owner.selectedCell');
-            this.get('owner').selectCell(jQuery(selectedCell.parent().next().children()[selectedCell.attr('data-index')]));
+            this.get('owner').selectCell(this.cellDown(this.get('owner.selectedCell')));
             return true;
+        },
+
+        moveDownAndModifySelection: function(event) {
+            return this.modifySelection(this.cellDown(this.get('owner.selectionEnd')));
         },
 
         moveUp: function(event) {
-            var selectedCell = this.getPath('owner.selectedCell');
-            this.get('owner').selectCell(jQuery(selectedCell.parent().prev().children()[selectedCell.attr('data-index')]));
+            this.get('owner').selectCell(this.cellUp(this.get('owner.selectedCell')));
             return true;
         },
 
+        moveUpAndModifySelection: function(event) {
+            return this.modifySelection(this.cellUp(this.get('owner.selectionEnd')));
+        },
+
         insertTab: function(event) {
-            this.get('owner').invokeStateMethodByValuesOn('moveDown', 'moveRight');
+            this.get('owner').invokeStateMethod('moveRight');
             return true;
         },
 
         insertBacktab: function(event) {
-            this.get('owner').invokeStateMethodByValuesOn('moveUp', 'moveLeft');
+            this.get('owner').invokeStateMethod('moveLeft');
             return true;
         },
 
-        // We need to use the keyPress event, as some browsers don't report the character pressed correctly with keyDown
-        keyPress: function(event) {
-            var dataCell = this.getPath('owner.selectedDataCell');
-            if (Ember.none(dataCell) || (dataCell && !dataCell.isEditable())) {
-                return false;
-            }
-            var key = String.fromCharCode(event.which);
-            if (event.metaKey) { return false; }
-            if (key.match(/[a-zA-Z0-9+*\-\[\/\=]/)) {
-                var owner = this.get('owner');
-                owner.set('editValue', key);
-                this.startEdit();
-                return true;
-            }
-            return false;
+        enterState: function() {
+            this.get('owner').notifySelectionChange();
         },
 
-        enterState: function() {
-            this.getPath('owner.selection').show();
+        exitState: function() {
+            if (this.get('owner._state') !== 'inDOM') return;
+            var clipboardContainer = this.$('.clipboard-container');
+            if (clipboardContainer) clipboardContainer.empty().hide();
         }
     }),
 
@@ -6262,8 +7094,8 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
 
         insertNewline: function(event) {
             var owner = this.get('owner');
-            this.gotoState('selected');
-            owner.invokeStateMethodByValuesOn('moveRight', 'moveDown');
+            this.gotoFlameState('selected');
+            owner.invokeStateMethod('moveDown');
         },
 
         moveLeft: function(event) {
@@ -6291,7 +7123,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
         },
 
         deleteBackward: function(event) {
-            this.gotoState('selected');
+            this.gotoFlameState('selected');
             return true;
         },
 
@@ -6299,7 +7131,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             var owner = this.get('owner');
             var cell = owner._cellForTarget(event.target);
             if (owner.isCellSelectable(cell)) {
-                this.gotoState('selected');
+                this.gotoFlameState('selected');
                 owner.selectCell(cell);
                 return true;
             } else {
@@ -6311,20 +7143,21 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             var owner = this.get('owner');
             var selection = owner.get('selection');
             var dataCell = owner.get('selectedDataCell');
-            var readOnlyValue = owner.editableValue(dataCell, true);
+            var readOnlyValue = Handlebars.Utils.escapeExpression(owner.editableValue(dataCell, true));
+            this.selectionContent = selection.html();
             selection.html(readOnlyValue);
             selection.addClass('read-only is-selectable');
         },
 
         exitState: function() {
-            var selection = this.getPath('owner.selection');
-            selection.html('<div class="table-selection-background"></div>');
+            var selection = this.get('owner.selection');
+            selection.html(this.selectionContent);
             selection.removeClass('read-only is-selectable');
         },
 
         _invokeInSelected: function(action) {
             var owner = this.get('owner');
-            this.gotoState('selected');
+            this.gotoFlameState('selected');
             owner.invokeStateMethod(action);
         }
     }),
@@ -6335,11 +7168,19 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             return true;
         },
 
+        moveLeft: function() {
+            return Flame.ALLOW_BROWSER_DEFAULT_HANDLING;
+        },
+
+        moveRight: function() {
+            return Flame.ALLOW_BROWSER_DEFAULT_HANDLING;
+        },
+
         insertNewline: function(event) {
             var owner = this.get('owner');
             if (owner._confirmEdit()) {
-                this.gotoState('selected');
-                owner.invokeStateMethodByValuesOn('moveRight', 'moveDown');
+                this.gotoFlameState('selected');
+                owner.invokeStateMethod('moveDown');
             }
             return true;
         },
@@ -6347,7 +7188,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
         insertTab: function(event) {
             var owner = this.get('owner');
             if (owner._confirmEdit()) {
-                this.gotoState('selected');
+                this.gotoFlameState('selected');
                 owner.invokeStateMethod('insertTab');
             }
             return true;
@@ -6356,7 +7197,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
         insertBacktab: function(event) {
             var owner = this.get('owner');
             if (owner._confirmEdit()) {
-                this.gotoState('selected');
+                this.gotoFlameState('selected');
                 owner.invokeStateMethod('insertBacktab');
             }
             return true;
@@ -6367,10 +7208,10 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             var cell = owner._cellForTarget(event.target);
             var editField = owner.get('editField');
             if (owner.isCellSelectable(cell) && owner._confirmEdit()) {
-                this.gotoState('selected');
+                this.gotoFlameState('selected');
                 owner.selectCell(cell);
                 return true;
-            } else if (cell && editField && cell[0] !== editField[0] && !owner._confirmEdit()) {
+            } else if (!Ember.isEmpty(cell) && editField && cell[0] !== editField[0] && !owner._confirmEdit()) {
                 editField.focus();
                 return true;
             } else {
@@ -6383,7 +7224,6 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             var selectedCell = owner.get('selectedCell');
             var dataCell = owner.get('selectedDataCell');
             var editCell = owner.get('editField');
-            var scrollable = owner.getPath('parentView.scrollable');
             var selection = owner.get('selection');
             var options = dataCell.options();
 
@@ -6392,7 +7232,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             if (!dataCell.showEditor(selectedCell, owner, owner.get('content'))) {
                 // No special editor, use one of the defaults
                 if (options) { // Drop down menu for fields with a fixed set of options
-                    var menu = Flame.MenuView.create({
+                    var menu = Flame.MenuView.createWithMixins({
                         minWidth: selectedCell.outerWidth(),
                         parent: owner, // Reference to the cube table view
                         items: options.map(function(o) {
@@ -6404,7 +7244,10 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
                             };
                         }),
                         // Make the cube table view go back to the selected state when the menu is closed
-                        close: function() { this.get('parent').gotoState('selected'); this._super(); }
+                        close: function() {
+                            owner.gotoFlameState('selected');
+                            this._super();
+                        }
                     });
                     menu.popup(selectedCell);
                 } else { // Normal edit field for everything else
@@ -6437,32 +7280,49 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
         exitState: function() {
             var owner = this.get('owner');
             var editField = owner.get('editField');
-
-            var selectedCell = owner.get('selectedCell');
-            selectedCell.removeClass('editing');
-
             editField.hide();
             editField.removeClass('invalid');
+
+            owner.get('selectedCell').removeClass('editing');
         }
     }),
+
+    notifySelectionChange: function() {
+        var tableViewDelegate = this.get('tableViewDelegate');
+        if (tableViewDelegate && tableViewDelegate.didMakeSelection) {
+            tableViewDelegate.didMakeSelection(
+                this,
+                this.get('selectedCell'),
+                this.get('selectionEnd'),
+                this.get('selectedDataCell')
+            );
+        }
+    },
 
     didSelectMenuItem: function(value) {
         var editField = this.get('editField');
         editField.val(value || '');
         this._confirmEdit();
-        this.invokeStateMethodByValuesOn('moveRight', 'moveDown');
+        this.invokeStateMethod('moveDown');
     },
 
     willLoseKeyResponder: function() {
-        this.set('selectedCell', null);
-        this.gotoState('loaded');
+        this.gotoFlameState('loaded');
+    },
+
+    columnIndex: function(cell) {
+        return parseInt(cell.attr('data-index'), 10);
+    },
+
+    rowIndex: function(cell) {
+        return parseInt(cell.parent().attr('data-index'), 10);
     },
 
     // Get the Cell instance that corresponds to the selected cell in the view
     selectedDataCell: function() {
         var selectedCell = this.get('selectedCell');
-        return this.get('data')[selectedCell.parent().attr('data-index')][selectedCell.attr('data-index')];
-    }.property(),
+        return this.get('data')[this.rowIndex(selectedCell)][this.columnIndex(selectedCell)];
+    }.property().volatile(),
 
     editableValue: function(dataCell, readOnly) {
         var editValue = this.get('editValue');
@@ -6470,7 +7330,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             return editValue;
         } else {
             editValue = readOnly ? dataCell.formattedValue() : dataCell.editableValue();
-            return !Ember.none(editValue)? editValue : '';
+            return !Ember.isNone(editValue) ? editValue : '';
         }
     },
 
@@ -6480,24 +7340,25 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
     },
 
     _selectionDidChange: function() {
-        var selectedCell = this.get('selectedCell');
-        if (!selectedCell) {
-            return;
-        }
-        var selection = this.get('selection');
-        var scrollable = this.getPath('parentView.scrollable');
+        Ember.run.once(this, this._updateSelection);
+    }.observes('selectedCell', 'selectionEnd'),
 
+    _updateSelection: function() {
+        var selectedCell = this.get('selectedCell');
+        if (!selectedCell) return;
+
+        var selection = this.get('selection');
+        var scrollable = this.get('parentView.scrollable');
         var position = selectedCell.position();
         var scrollTop = scrollable.scrollTop();
         var scrollLeft = scrollable.scrollLeft();
 
-        var offset = jQuery.browser.webkit ? 1 : 2;
-        selection.css({
-            left: position.left + scrollLeft - offset + 'px',
-            top: position.top + scrollTop - offset + 'px',
-            width: selectedCell.outerWidth() - 3 + 'px',
-            height: selectedCell.outerHeight() - 1 + 'px'
-        });
+        selectedCell.addClass('active-cell');
+        selection.css(this._selectionCSS(selectedCell, this.get('selectionEnd'), scrollTop, scrollLeft, position));
+
+        if (this.get('parentView.currentFlameState.name') === 'resizing') {
+            return; // Scrolling the viewport used to mess up resizing columns when the selected cell was not in view
+        }
 
         // Ensure the selection is within the visible area of the scrollview
         if (position.top < 0) {
@@ -6511,8 +7372,29 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             var left = position.left + selectedCell.outerWidth() - scrollable.outerWidth();
             scrollable.scrollLeft(left + scrollLeft + 17);
         }
-        selectedCell.addClass('active-cell');
-    }.observes('selectedCell'),
+    },
+
+    _selectionCSS: function(startCell, endCell, scrollTop, scrollLeft, position) {
+        var offset = isWebKit ? 0 : 1;
+        endCell = endCell || startCell;
+        var startPosition = position;
+        var endPosition = startCell === endCell ? position : endCell.position();
+
+        var minLeft = Math.min(startPosition.left, endPosition.left);
+        var minTop = Math.min(startPosition.top, endPosition.top);
+        var maxLeft = Math.max(startPosition.left, endPosition.left);
+        var maxTop = Math.max(startPosition.top, endPosition.top);
+
+        var cellWidth = startPosition.left < endPosition.left ? endCell.outerWidth() : startCell.outerWidth();
+        var cellHeight = startPosition.top < endPosition.top ? endCell.outerHeight() : startCell.outerHeight();
+
+        return {
+            left: minLeft + scrollLeft - offset,
+            top: minTop + scrollTop - offset,
+            width: maxLeft + cellWidth - minLeft - 5,
+            height: maxTop + cellHeight - minTop - 3
+        };
+    },
 
     _selectionWillChange: function() {
         var selectedCell = this.get('selectedCell');
@@ -6523,26 +7405,30 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
 
     _confirmEdit: function() {
         var newValue = this.get('editField').val();
-        return this._validateAndSet(newValue);
+        if (!this._validateAndSet(newValue)) {
+            this.get('editField').addClass('invalid');
+            return false;
+        }
+        return true;
     },
 
     // Returns true if cell valid, or false otherwise
-    _validateAndSet: function(newValue) {
+    _validateAndSet: function(newValue, cell) {
         var data = this.get('data');
-        var selectedCell = this.get('selectedCell');
-        var columnIndex = parseInt(selectedCell.attr('data-index'), 10);
-        var rowIndex = parseInt(selectedCell.parent().attr('data-index'), 10);
+        var selectedCell = cell || this.get('selectedCell');
+        var columnIndex = this.columnIndex(selectedCell);
+        var rowIndex = this.rowIndex(selectedCell);
         var dataCell = data[rowIndex][columnIndex];
 
         // Skip saving if value has not been changed
         if (Ember.compare(dataCell.editableValue(), newValue) === 0) {
             return true;
         } else if (dataCell.validate(newValue)) {
-            var cellUpdateDelegate = this.get('tableViewDelegate');
-            Ember.assert('No tableViewDelegate set!', !!cellUpdateDelegate || !!cellUpdateDelegate.cellUpdated);
+            var tableViewDelegate = this.get('tableViewDelegate');
+            Ember.assert('No tableViewDelegate set!', !!tableViewDelegate || !!tableViewDelegate.cellUpdated);
 
             var index = [rowIndex, columnIndex];
-            if (cellUpdateDelegate.cellUpdated(dataCell, newValue, index)) {
+            if (tableViewDelegate.cellUpdated(dataCell, newValue, index)) {
                 var dirtyCells = this.get('dirtyCells').slice();
                 dirtyCells.push([rowIndex, columnIndex]);
                 this.set('dirtyCells', dirtyCells);
@@ -6550,26 +7436,21 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
 
             return true;
         } else {
-            this.get('editField').addClass('invalid');
             return false;
         }
     },
 
     _cancelEditingOrSelecting: function() {
-        this.gotoState('selected');
+        this.gotoFlameState('selected');
     },
 
-    invokeStateMethodByValuesOn: function(onRowsState, onColumnsState) {
-        if (this.get('areValuesOnRows')) {
-            this.invokeStateMethod(onRowsState);
-        } else {
-            this.invokeStateMethod(onColumnsState);
-        }
-    },
-
-    selectCell: function(newSelection) {
-        if (this.getPath('parentView.allowSelection') && this.isCellSelectable(newSelection)) {
-            this.set('selectedCell', newSelection);
+    selectCell: function(newSelection, notify) {
+        if (this.get('parentView.allowSelection') && this.isCellSelectable(newSelection)) {
+            this.setProperties({
+                selectedCell: newSelection,
+                selectionEnd: newSelection
+            });
+            if (notify !== false) this.notifySelectionChange();
             return true;
         }
         return false;
@@ -6585,76 +7466,104 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
 
     updateColumnWidth: function(index, width) {
         var cells = this.$('td[data-index=%@]'.fmt(index));
-        cells.css({'width': '%@px'.fmt(width)});
+        cells.first().css('width', width);
         this.propertyDidChange('selectedCell'); // Let the size of the selection div be updated
     },
 
     render: function(buffer) {
-        this._renderElementAttributes(buffer);
-        this.set('selectedCell', null);
-        this.gotoState('loaded');
+        this.gotoFlameState('loaded');
         this._renderTable(buffer);
     },
 
     _renderTable: function(buffer) {
         var data = this.get('data');
-        if (!(data && data[0])) return buffer;
+        if (!(data && data[0])) return;
 
         var rowCount = data.length;
         var columnCount = data[0].length;
-        var defaultCellWidth = this.getPath('parentView.defaultColumnWidth');
-        var columnLeafs = this.getPath('parentView.content.columnLeafs');
+        var defaultCellWidth = this.get('parentView.defaultColumnWidth');
+        var columnLeafs = this.get('parentView.content.columnLeafs');
         var cellWidth;
+        var escape = Handlebars.Utils.escapeExpression;
 
         var classes = 'flame-table';
-        if (!this.getPath('parentView.allowSelection')) { classes += ' is-selectable'; }
-        buffer = buffer.begin('table').attr('class', classes).attr('width', '1px');
-        var i, j;
-        for (i = 0; i < rowCount; i++) {
-            buffer.push('<tr data-index="'+i+'">');
-            for (j = 0; j < columnCount; j++) {
+        if (!this.get('parentView.allowSelection')) classes += ' is-selectable';
+        var div = document.createElement('div');
+        buffer.begin('table').attr('class', classes).attr('width', '1px');
+        buffer.pushOpeningTag();
+        for (var i = 0; i < rowCount; i++) {
+            buffer.push('<tr data-index="' + i + '">');
+            for (var j = 0; j < columnCount; j++) {
+                var content;
                 var cell = data[i][j];
-                var cssClassesString = cell ? cell.cssClassesString() : "";
+                var cssClassesString = '';
+                var titleValue = '';
+                var inlineStyles = '';
+                if (cell) {
+                    content = cell.content();
+                    content = (Ember.isNone(content) ? '' : content);
+                    if (content instanceof HTMLElement || content instanceof DocumentFragment) {
+                        while (div.firstChild) div.removeChild(div.firstChild);
+                        div.appendChild(content);
+                        content = div.innerHTML;
+                    } else {
+                        // Escape the cell content unless there is a deliberate implementation for cells with HTML content.
+                        content = escape(content);
+                    }
+                    cssClassesString = cell.cssClassesString();
+                    if (cell.inlineStyles) inlineStyles = cell.inlineStyles();
+                    titleValue = (cell.titleValue && cell.titleValue() ? 'title="%@"'.fmt(escape(cell.titleValue())) : '');
+                } else {
+                    content = '<span style="color: #999">...</span>';
+                }
                 cellWidth = columnLeafs[j].get('render_width') || defaultCellWidth;
-                if (jQuery.browser.mozilla) cellWidth -= 5;
-                // Surround the content with a relatively positioned div to make absolute positioning of content work with Firefox
-                buffer.push('<td data-index="%@" class="%@" style="width: %@px;" %@><div style="position: relative">%@</div></td>'.fmt(
-                        j,
-                        (cssClassesString + (j % 2 === 0 ? " even-col" : " odd-col")),
-                        cellWidth,
-                        (cell && cell.titleValue && cell.titleValue() ? 'title="%@"'.fmt(cell.titleValue()) : ''),
-                        (cell ? cell.content() : '<span style="color: #999">...</span>')));
+                buffer.push('<td data-index="%@" class="%@" style="width: %@px; %@" %@>%@</td>'.fmt(
+                    j,
+                    (cssClassesString + (j % 2 === 0 ? ' even-col' : ' odd-col')),
+                    cellWidth,
+                    titleValue,
+                    inlineStyles,
+                    content
+                ));
             }
-            buffer.push("</tr>");
+            buffer.push('</tr>');
         }
-        buffer = buffer.end(); // table
+        buffer.pushClosingTag(); // table
 
         // Selection indicator
-        buffer = buffer.begin('div').attr('class', 'table-selection')
-                     // This div serves as the "invisible" (very transparent) background for the table selection div.
-                     // Without this, the table selection div would be totally transparent and render only a border.
-                     // This causes inconsistencies in IE; when the table selection div is clicked, it's unclear which
-                     // element will receive the event.
-                     .begin('div').attr('class', 'table-selection-background').end()
-                 .end(); // div.table-selection
+        buffer.push('<div class="table-selection"></div>');
 
         // Edit field (text)
-        buffer = buffer.begin('input').attr('class', 'table-edit-field').end();
+        buffer.push('<input type="text" class="table-edit-field">');
+
+        // Container that will hold the textarea used for copy/pasting cells
+        buffer.push('<div class="clipboard-container"></div>');
     },
 
     // Update dirty cells
     _cellsDidChange: function() {
         this.manipulateCells(this.get('dirtyCells'), function(cell, element, isEvenColumn) {
-            var cssClassesString = (cell ? cell.cssClassesString() : "") + (isEvenColumn ? " even-col" : " odd-col");
+            var cssClassesString = (cell ? cell.cssClassesString() : '') + (isEvenColumn ? " even-col" : " odd-col");
             var content = cell.content();
             var titleValue = cell.titleValue && cell.titleValue();
+            var inlineStyles = cell.inlineStyles ? cell.inlineStyles() : '';
+            var cellWidth = element.style.width;
+            if (!Ember.isNone(cellWidth)) inlineStyles = 'width: %@; %@'.fmt(cellWidth, inlineStyles);
+            element.setAttribute('style', inlineStyles);
             element.className = cssClassesString;
-            element.innerHTML = Ember.none(content) ? "" : '<div style="position: relative">' + content + '</div>';
+
+            if (content instanceof HTMLElement || content instanceof DocumentFragment) {
+                while (element.firstChild) element.removeChild(element.firstChild);
+                element.appendChild(content);
+            } else {
+                element.textContent = Ember.isNone(content) ? '' : content;
+            }
+
             if (titleValue) {
                 element.title = titleValue;
             }
         }, ++this._updateCounter);
-    }.observes('dirtyCells'),
+    }.observes('dirtyCells').on('init'),
 
     // Mark and disable updating cells
     _updatingCellsDidChange: function() {
@@ -6662,10 +7571,10 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
             if (cell.pending) {
                 // Cell isn't loaded yet, insert a placeholder value
                 cell.pending.isUpdating = true;
-                element.className += (isEvenColumn ? " even-col" : " odd-col");
+                element.className += (isEvenColumn ? ' even-col' : ' odd-col');
             } else {
                 cell.isUpdating = true;
-                var cssClassesString = cell.cssClassesString() + (isEvenColumn ? " even-col" : " odd-col");
+                var cssClassesString = cell.cssClassesString() + (isEvenColumn ? ' even-col' : ' odd-col');
                 element.className = cssClassesString;
             }
         });
@@ -6673,7 +7582,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
 
     manipulateCells: function(cellRefs, callback, updateCounter) {
         var data = this.get('data');
-        if (!cellRefs || cellRefs.length === 0) { return; }
+        if (!cellRefs || cellRefs.length === 0 || !this.$()) return;
         var table = this.$('table.flame-table');
 
         var allCells = table.find('td');
@@ -6685,7 +7594,7 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
     },
 
     _batchUpdate: function(maxUpdates, startIx, updateCounter, cellRefs, data, allCells, callback) {
-        if (typeof updateCounter !== "undefined" && updateCounter != this._updateCounter) { return; }
+        if (typeof updateCounter !== 'undefined' && updateCounter !== this._updateCounter) return;
         // If we for some reason update / change the table before all these calls have gone through, we may update
         // nodes that no longer exist in DOM but that shouldn't cause problems.
         var len = cellRefs.length;
@@ -6718,9 +7627,26 @@ Flame.TableDataView = Flame.View.extend(Flame.Statechart, {
     }
 });
 
+})();
+(function() {
+'use strict';
+
+
+var alias = Ember.computed.alias;
+
+var unbindScroll = function() {
+    var scrollable = this.get('scrollable');
+    if (scrollable) {
+        scrollable.off('scroll');
+    }
+};
+
 Flame.TableView = Flame.View.extend(Flame.Statechart, {
-    classNames: 'flame-table-view'.w(),
-    childViews: 'tableDataView'.w(),
+    MIN_COLUMN_WIDTH: 30,
+
+    classNames: ['flame-table-view'],
+    childViews: ['tableDataView'],
+    displayProperties: ['contentAdapter.headers'],
     acceptsKeyResponder: false,
 
     // References to DOM elements
@@ -6735,47 +7661,80 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
     isResizable: true,
     allowSelection: false,
 
-    initialState: 'idle',
+    initialFlameState: 'idle',
 
     defaultColumnWidth: 88,
-    tableDelegate: null,
-    content: null,  // Set to a Flame.TableController
+    rowHeaderWidth: null,
+    content: null, // Set to a Flame.TableController
     allowRefresh: true,
     batchUpdates: true,
+    useAutoWidth: false,
+    tableViewDelegate: null,
 
     contentAdapter: function() {
         return Flame.TableViewContentAdapter.create({
             content: this.get('content')
         });
-    }.property('content').cacheable(),
+    }.property('content'),
 
     tableDataView: Flame.TableDataView.extend({
-        dataBinding: '^content._data',
-        dirtyCellsBinding: '^content.dirtyCells',
-        areValuesOnRowsBinding: '^content.areValuesOnRows',
-        totalRowIdsBinding: '^content.totalRowIds',
-        totalColumnIdsBinding: '^content.totalColumnIds',
-        tableViewDelegateBinding: '^tableViewDelegate',
-        cellsMarkedForUpdateBinding: '^content.cellsMarkedForUpdate',
-        batchUpdatesBinding: '^batchUpdates'
+        dataBinding: 'parentView.content._data',
+        content: alias('parentView.content'),
+        dirtyCells: alias('parentView.content.dirtyCells'),
+        areValuesOnRows: alias('parentView.content.areValuesOnRows'),
+        totalRowIds: alias('parentView.content.totalRowIds'),
+        totalColumnIds: alias('parentView.content.totalColumnIds'),
+        tableViewDelegate: alias('parentView.tableViewDelegate'),
+        cellsMarkedForUpdate: alias('parentView.content.cellsMarkedForUpdate'),
+        batchUpdates: alias('parentView.batchUpdates')
     }),
 
     rowDepth: function() {
-        return this.getPath('contentAdapter.rowHeaderRows.maxDepth');
-    }.property('contentAdapter.rowHeaderRows').cacheable(),
+        return this.get('contentAdapter.rowHeaderRows.maxDepth');
+    }.property('contentAdapter.rowHeaderRows'),
 
+    /* IE 5-8 trigger mouse events in unorthodox order:
+
+     IE 5-8:        Any sane browser:
+     mousedown      mousedown
+     mouseup        mouseup
+     click          click
+     mouseup        mousedown
+     dblclick       mouseup
+                    click
+                    dblclick
+
+     Normally, the dblclick event works as expected, because the mouseup event is not being triggered for idle state
+     if mouseDown precedes it (because mouseup event is handled in resizing state). However, because IE8 triggers
+     two mouseups but only one mousedown for a dblclick event, the mouseUp function is called for idle state - which
+     in turn opens the sort order panel.
+
+     By adding another state we can mitigate the issue. The mousedown event puts the view into clickInProgress
+     state, and in clickInProgress mouseup returns it back to idle state. So, the state transition works as before.
+     However, if user clicks the resize-handle the view goes to resizing state. The first mouseup event moves the view
+     back to idle state, where the second redundant mouseup gets eaten silently.
+    */
     idle: Flame.State.extend({
         mouseDown: function(event) {
+            this.gotoFlameState('clickInProgress');
+
             var target = jQuery(event.target);
             if (target.is('div.resize-handle')) {
-                this.gotoState('resizing');
                 var owner = this.get('owner');
-                var cell = target.parent();
-                owner.set('resizingCell', cell);
-                owner.set('dragStartX', event.pageX);
-                owner.set('startX', parseInt(target.parent().css('width'), 10));
-                owner.set('offset', parseInt(this.getPath('owner.tableCorner').css('width'), 10));
-                owner.set('type', cell.is('.column-header td') ? 'column' : 'row');
+                // If a table cell is being edited at this point, its 'editField' would get displaced by the resizing operation, so we just turn the editing off
+                var tableDataView = owner.get('tableDataView');
+                if (tableDataView.get('currentFlameState.name') === 'editing') {
+                    tableDataView.cancel();
+                }
+                var cell = target.closest('td');
+                owner.setProperties({
+                    resizingCell: cell,
+                    dragStartX: event.pageX,
+                    startX: cell.get(0).clientWidth + 1,
+                    offset: parseInt(this.get('owner.tableCorner').css('width'), 10),
+                    type: cell.is('.column-header td') ? 'column' : 'row'
+                });
+                this.gotoFlameState('resizing');
                 return true;
             } else if (!!target.closest('.column-header').length) {
                 return true;
@@ -6786,22 +7745,56 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
             return false;
         },
 
+        doubleClick: function(event) {
+            var owner = this.get('owner');
+            if (!owner.get('useAutoWidth')) return false;
+
+            var target = jQuery(event.target), index, header;
+            if (!!target.closest('.column-header').length && (index = target.closest('td').attr('data-leaf-index'))) {
+                header = this.get('owner.content.columnLeafs')[index];
+
+                var columnDataAsString = owner.getColumnContents(header).map(function(e) { return e; }).join('<br>');
+                var columnDimensions = Flame.measureString(columnDataAsString, 'ember-view');
+
+                var isBold = target.closest('td').css('font-weight') === 'bold';
+                var headerLabelDimensions = Flame.measureString(owner.getLeafHeaderLabel(header), 'ember-view', 'label', isBold ? 'font-weight:bold;' : '');
+
+                var width = Math.max(columnDimensions.width, headerLabelDimensions.width) + 40;
+
+                if (width < owner.MIN_COLUMN_WIDTH) width = owner.MIN_COLUMN_WIDTH;
+                owner.setColumnWidth(header.leafIndex, width);
+                var resizeDelegate = owner.get('tableViewDelegate');
+                if (resizeDelegate && resizeDelegate.columnResized) {
+                    resizeDelegate.columnResized(index, width);
+                }
+                return true;
+            }
+            return false;
+        }
+    }),
+
+    clickInProgress: Flame.State.extend({
         mouseUp: function(event) {
-            var clickDelegate = this.getPath('owner.tableViewDelegate');
-            if (clickDelegate && clickDelegate.columnHeaderClicked) {
-                var target = jQuery(event.target), index, header;
-                if (!!target.closest('.column-header').length && (index = target.closest('td').attr('data-leaf-index'))) {
+            this.gotoFlameState('idle');
+            var clickDelegate = this.get('owner.tableViewDelegate');
+            if (clickDelegate) {
+                var target = jQuery(event.target);
+                var header;
+                if (!!target.closest('.column-header').length) {
                     if (clickDelegate.columnHeaderClicked) {
-                        header = this.getPath('owner.content.columnLeafs')[index];
+                        // Find the corresponding TableHeader instance for the clicked cell.
+                        var level = parseInt(target.closest('tr').attr('class').match(/level\-(\d+)/)[1], 10);
+                        var row = this.get('owner.contentAdapter.columnHeaderRows')[level - 1];
+                        header = row[target.closest('tr').find('td').index(target.closest('td'))];
                         clickDelegate.columnHeaderClicked(header, target);
                     }
                     return true;
                 } else if (!!target.closest('.row-header').length) {
                     if (clickDelegate.rowHeaderClicked) {
                         var cell = target.closest('td');
-                        index = parseInt(cell.attr('data-index'), 10);
-                        header = this.getPath('owner.content._headers.rowHeaders')[index];
-                        if (!header) { return false; }
+                        var index = parseInt(cell.attr('data-index'), 10);
+                        header = this.get('owner.content._headers.rowHeaders')[index];
+                        if (!header) return false;
                         clickDelegate.rowHeaderClicked(header, target, index);
                     }
                     return true;
@@ -6813,195 +7806,268 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
     }),
 
     resizing: Flame.State.extend({
-        mouseMove: function(event) {
-            var target = jQuery(event.target);
-            var cell = this.getPath('owner.resizingCell');
-            var deltaX = event.pageX - this.getPath('owner.dragStartX');
-            var cellWidth = this.getPath('owner.startX') + deltaX;
-            if (cellWidth < 30) { cellWidth = 30; }
-            var leafIndex;
-            // Adjust size of the cell
-            if (this.getPath('owner.type') === 'column') { // Update data table column width
-                leafIndex = parseInt(cell.attr('data-leaf-index'), 10) + 1;
-                cell.parents('table').find('colgroup :nth-child(%@)'.fmt(leafIndex)).css('width', '%@px'.fmt(cellWidth));
-                this.get('owner')._synchronizeColumnWidth();
-            } else {
-                var width = this.getPath('owner.offset') + deltaX - 2;
-                if (width < 30) { width = 30; }
-                if (jQuery.browser.mozilla) {
-                    width -= 1;
-                } else if (jQuery.browser.webkit || jQuery.browser.msie) {
-                    width -= 2;
-                }
-                // Move data table and column header
-                this.getPath('owner.scrollable').css('left', '%@px'.fmt(width));
-                this.getPath('owner.columnHeader').parent().css('left', '%@px'.fmt(width));
-                this.getPath('owner.tableCorner').css('width', '%@px'.fmt(width));
-                // Update column width
-                var totalDepth = this.getPath('owner.rowDepth');
-                var remainingDepth = 0;
-                // must account for row headers spanning multiple columns to get the right leafIndex and width
-                cell.nextAll().each(function() {
-                    var colspan = $(this).attr('colspan');
-                    remainingDepth += colspan ? parseInt(colspan, 10) : 1;
-                });
-                leafIndex = totalDepth - remainingDepth;
+        enterState: function() {
+            var cell = this.get('owner.resizingCell');
+            var $table = cell.closest('table');
+            var columns = $table.find('col');
 
-                var colWidth = cellWidth;
-                if ($(cell).attr('colspan')) {
-                    var colStart = leafIndex - parseInt($(cell).attr('colspan'), 10) + 1; // the first column included in the span
-                    for(colStart; colStart < leafIndex; colStart++) {
-                        colWidth -= parseInt(cell.parents('table').find('colgroup :nth-child(%@)'.fmt(colStart)).css('width'), 10);
-                    }
-                }
-                cell.parents('table').find('colgroup :nth-child(%@)'.fmt(leafIndex)).css('width', '%@px'.fmt(colWidth));
+            if (this.get('owner.type') === 'column') {
+                var column = parseInt(cell.attr('data-leaf-index'), 10);
+                this.set('resizingColumn', columns.eq(column));
+            } else {
+                var totalDepth = columns.length;
+                var cells = [];
+                $table.find('td').each(function() {
+                    var $cell = $(this);
+                    if (!$cell.attr('colspan')) cells.push($cell);
+                    if (cells.length === totalDepth) return false;
+                });
+                this.set('cells', cells);
+
+                // Get column index for resized cell
+                // must account for row headers spanning multiple columns to get the right leafIndex and width
+                var remainingDepth = 0;
+                cell.nextAll().each(function() {
+                    remainingDepth += $(this).attr('colspan') || 1;
+                });
+                var leafIndex = totalDepth - remainingDepth - 1;
+
+                this.set('resizingColumn', columns.eq(leafIndex));
+                this.set('owner.resizingCell', cells[leafIndex]);
+                this.set('owner.startX', cells[leafIndex].get(0).clientWidth + 1);
+            }
+        },
+
+        mouseMove: function(event) {
+            var owner = this.get('owner');
+            var deltaX = event.pageX - owner.get('dragStartX');
+            var minWidth = owner.get('MIN_COLUMN_WIDTH');
+            var cellWidth = owner.get('startX') + deltaX;
+            if (cellWidth < minWidth) cellWidth = minWidth;
+            // Adjust size of the cell
+            if (owner.get('type') === 'column') { // Update data table column width
+                this.get('resizingColumn').css('width', cellWidth);
+                owner._synchronizeColumnWidth(cellWidth);
+            } else {
+                var width = owner.get('offset') + cellWidth - owner.get('startX');
+
+                // Move data table and column header
+                owner.get('scrollable').css('left', width);
+                owner.get('columnHeader').parent().css('left', width);
+                owner.get('tableCorner').css('width', width);
+
+                this.get('resizingColumn').css('width', cellWidth);
             }
         },
 
         mouseUp: function(event) {
             var owner = this.get('owner');
-            if (owner.get('type') === 'column') {
-                var resizeDelegate = owner.get('tableViewDelegate');
-                if (resizeDelegate && resizeDelegate.columnResized) {
-                    var cell = owner.get('resizingCell');
+            var resizeDelegate = owner.get('tableViewDelegate');
+            if (resizeDelegate) {
+                var cell = owner.get('resizingCell');
+                if (owner.get('type') === 'column' && resizeDelegate.columnResized) {
                     var width = parseInt(cell.css('width'), 10);
                     var index = parseInt(cell.attr('data-leaf-index'), 10);
                     resizeDelegate.columnResized(index, width);
+                } else if (resizeDelegate.rowHeaderResized) {
+                    // Can't use col-element to get the width from as it does not work correctly in IE
+                    var widths = this.get('cells').map(function(cell) { return cell.outerWidth(); });
+                    resizeDelegate.rowHeaderResized(widths);
                 }
             }
-            this.gotoState('idle');
+            this.gotoFlameState('idle');
             return true;
         }
     }),
 
-    _synchronizeColumnWidth: function() {
+    setColumnWidth: function(columnIndex, cellWidth) {
+        this.$('.column-header col').eq(columnIndex).css('width', cellWidth + 3);
+        var table = this.objectAt(0);
+        table.updateColumnWidth(columnIndex, cellWidth + 3);
+    },
+
+    _setColumnHeaderHeights: function(heights, columnRowHeight, tableTopMargin) {
+        heights.forEach(function(value, index) {
+            // Get header row
+            var $tr = this.$('.column-header .level-' + (index + 1));
+            $tr.find('.content-container').css('height', value * columnRowHeight);
+            $tr.find('.resize-handle').css('height', value * columnRowHeight - 1);
+            $tr.find('.label').css('white-space', value === 1 ? 'nowrap' : 'normal');
+        }, this);
+
+        var totalHeight = 2 + heights.length - 1;
+        heights.forEach(function(h) {
+            totalHeight += h * columnRowHeight;
+        });
+
+        // Update offset of scrollable
+        this.$('.scrollable').css('top', totalHeight + tableTopMargin);
+        // Update size of table corner
+        this.$('.table-corner').css('height', totalHeight);
+        // Update offset of row headers
+        this.$('.row-header').css('top', totalHeight + tableTopMargin);
+    },
+
+    getColumnContents: function(columnHeader) {
+        return this.get('content.tableData').map(function(e) {
+            var elem = e[columnHeader.leafIndex];
+            return Ember.isNone(elem) ? '' : elem.formattedValue();
+        });
+    },
+
+    getLeafHeaderLabel: function(header) {
+        var leaf = this.get('content.columnLeafs')[header.leafIndex];
+        return leaf.get('headerLabel');
+    },
+
+    _synchronizeColumnWidth: function(width) {
         // Update data table columns
         var cell = this.get('resizingCell');
-        var table = this.get('childViews')[0];
-        var width = parseInt(cell.css('width'), 10);
+        var table = this.objectAt(0);
         var index = parseInt(cell.attr('data-leaf-index'), 10);
-        if (jQuery.browser.webkit || jQuery.browser.msie) { width += 4; }
-        if (jQuery.browser.mozilla) { width -= 2; }
         table.updateColumnWidth(index, width);
     },
 
-    willInsertElement: function() {
-        var scrollable = this.get('scrollable');
-        if (scrollable) {
-            scrollable.unbind();
-        }
-    },
+    willInsertElement: unbindScroll,
+    willDestroyElement: unbindScroll,
 
     didInsertElement: function() {
-        this.set('scrollable', this.$('.flame-table').parent().parent());
+        this.set('scrollable', this.$('.scrollable'));
         this.set('rowHeader', this.$('.row-header table'));
         this.set('columnHeader', this.$('.column-header table'));
         this.set('tableCorner', this.$('.table-corner'));
-        this.get('scrollable').scroll({self: this}, this.didScroll);
+        this.get('scrollable').on('scroll', jQuery.proxy(this.didScroll, this));
     },
 
+    isScrolling: false,
     didScroll: function(event) {
-        var self = event.data.self;
-        var scrollable = self.get('scrollable');
-        // Scroll fixed headers
-        self.get('rowHeader').css('top', '-%@px'.fmt(scrollable.scrollTop()));
-        self.get('columnHeader').css('left', '-%@px'.fmt(scrollable.scrollLeft()));
+        var scrollable = this.get('scrollable');
+        this.lastScrollTop = scrollable.scrollTop();
+        this.lastScrollLeft = scrollable.scrollLeft();
+        if (!this.isScrolling) {
+            requestAnimationFrame(jQuery.proxy(this._updateHeaderPositions, this));
+        }
+        this.isScrolling = true;
     },
 
-    _headersDidChange: function() {
-        this.rerender();
-        // When the headers change, fully re-render the view
-    }.observes('contentAdapter.headers'),
+    _updateHeaderPositions: function() {
+        if (this.lastScrollTop !== this.lastSetScrollTop) {
+            this.get('rowHeader').css('top', -this.lastScrollTop);
+            this.lastSetScrollTop = this.lastScrollTop;
+        }
+        if (this.lastScrollLeft !== this.lastSetScrollLeft) {
+            this.get('columnHeader').css('left', -this.lastScrollLeft);
+            this.lastSetScrollLeft = this.lastScrollLeft;
+        }
+        this.isScrolling = false;
+    },
 
     render: function(buffer) {
-        this._renderElementAttributes(buffer);
         var renderColumnHeader = this.get('renderColumnHeader');
         var renderRowHeader = this.get('renderRowHeader');
         var didRenderTitle = false;
 
-        var headers = this.getPath('contentAdapter.headers');
+        var headers = this.get('contentAdapter.headers');
         if (!headers) {
             return; // Nothing to render
         }
 
-        if (this.getPath('content.title')) {
-            buffer = buffer.push('<div class="panel-title">%@</div>'.fmt(this.getPath('content.title')));
+        if (this.get('content.title')) {
+            buffer.push('<div class="panel-title">%@</div>'.fmt(Handlebars.Utils.escapeExpression(this.get('content.title'))));
             didRenderTitle = true;
         }
 
         var defaultColumnWidth = this.get('defaultColumnWidth');
-        var columnHeaderRows = this.getPath('contentAdapter.columnHeaderRows');
-        var rowHeaderRows = this.getPath('contentAdapter.rowHeaderRows');
+        var defaultRowHeaderWidth = this.get('rowHeaderWidth') || defaultColumnWidth;
+        var rowHeaderWidths = this.get('content').rowHeaderWidths ? this.get('content').rowHeaderWidths() : null;
+
+        var columnHeaderRows = this.get('contentAdapter.columnHeaderRows');
+        var rowHeaderRows = this.get('contentAdapter.rowHeaderRows');
         var columnHeaderHeight = columnHeaderRows.maxDepth * 21 + 1 + columnHeaderRows.maxDepth;
         var leftOffset = 0;
         if (renderRowHeader) {
-            leftOffset = rowHeaderRows.maxDepth * defaultColumnWidth + 1 + (renderColumnHeader ? 0 : 5);
+            if (rowHeaderWidths) {
+                var totalWidth = 0;
+                for (var i = 0; i < Math.max(rowHeaderRows.maxDepth, 1); i++) {
+                    totalWidth += isNaN(rowHeaderWidths[i]) ? defaultRowHeaderWidth : rowHeaderWidths[i];
+                }
+                leftOffset = totalWidth + 1 + (renderColumnHeader ? 0 : 5);
+            } else {
+                leftOffset = rowHeaderRows.maxDepth * defaultRowHeaderWidth + 1 + (renderColumnHeader ? 0 : 5);
+            }
         }
         var topOffset = didRenderTitle ? 18 : 0;
 
         if (renderColumnHeader) {
             // Top left corner of the headers
-            buffer = buffer.push('<div class="table-corner" style="top: %@px; left: 0px; height: %@px; width: %@px;"></div>'.fmt(topOffset, columnHeaderHeight, leftOffset));
+            buffer.push('<div class="table-corner" style="top: %@px; left: 0; height: %@px; width: %@px;"></div>'.fmt(topOffset, columnHeaderHeight, leftOffset));
             // Column headers
-            buffer = this._renderHeader(buffer, 'column', leftOffset, defaultColumnWidth);
+            this._renderHeader(buffer, 'column', leftOffset, defaultColumnWidth);
             topOffset += columnHeaderHeight;
         }
         if (renderRowHeader) {
             // Row headers
-            buffer = this._renderHeader(buffer, 'row', topOffset, defaultColumnWidth);
+            this._renderHeader(buffer, 'row', topOffset, defaultRowHeaderWidth);
         }
 
         // Scrollable div
-        buffer = buffer.begin('div').attr('style', 'overflow: auto; bottom: 0px; top: %@px; left: %@px; right: 0px;'.fmt(topOffset, leftOffset));
-        buffer = buffer.attr('class', 'scrollable');
+        buffer.push('<div class="scrollable" style="overflow: auto; bottom: 0; top: %@px; left: %@px; right: 0;">'.fmt(topOffset, leftOffset));
         // There should really only be one child view, the TableDataView
-        this.forEachChildView(function(view) {
+        this.forEach(function(view) {
             view.renderToBuffer(buffer);
         });
-        buffer = buffer.end(); // div
+        buffer.push('</div>');
     },
 
     _renderHeader: function(buffer, type, offset, defaultColumnWidth) {
-        var headers = this.getPath('contentAdapter.headers');
+        var headers = this.get('contentAdapter.headers');
         if (!headers) {
-            return buffer.begin('div').end();
+            buffer.push('<div></div>');
+            return;
         }
 
         var position, i;
         if (type === 'column') {
-            headers = this.getPath('contentAdapter.columnHeaderRows');
+            headers = this.get('contentAdapter.columnHeaderRows');
             position = 'left';
         } else {
-            headers = this.getPath('contentAdapter.rowHeaderRows');
+            headers = this.get('contentAdapter.rowHeaderRows');
             position = 'top';
         }
         var length = headers.length;
 
-        buffer = buffer.begin('div').addClass('%@-header'.fmt(type)).attr('style', 'position: absolute; %@: %@px'.fmt(position, offset));
-        buffer = buffer.begin('table').attr('style', 'position: absolute').attr('width', '1px');
-        buffer = buffer.begin('colgroup');
+        buffer.begin('div').addClass('%@-header'.fmt(type)).attr('style', 'position: absolute; %@: %@px'.fmt(position, offset));
+        buffer.pushOpeningTag();
+        buffer.begin('table').attr('style', 'position: absolute').attr('width', '1px');
+        buffer.pushOpeningTag();
+
+        buffer.push('<colgroup>');
         if (type === 'row') {
-            for (i = 1; i < 4; i++) {
-                buffer = buffer.push('<col style="width: %@px;" class="level-%@" />'.fmt(defaultColumnWidth, i));
+            var widths = this.get('content').rowHeaderWidths ? this.get('content').rowHeaderWidths() : null;
+            for (i = 0; i < (headers.maxDepth || 1); i++) {
+                var width = (widths && widths[i]) ? widths[i] : defaultColumnWidth;
+                buffer.push('<col style="width: %@px;" class="level-%@">'.fmt(width, i + 1));
             }
         } else {
-            var l = this.getPath('content.columnLeafs').length;
+            var l = this.get('content.columnLeafs').length;
             for (i = 0; i < l; i++) {
-                buffer = buffer.push('<col style="width: %@px;" />'.fmt(this.getPath('content.columnLeafs')[i].get('render_width') || defaultColumnWidth));
+                buffer.push('<col style="width: %@px;">'.fmt(this.get('content.columnLeafs')[i].get('render_width') || defaultColumnWidth));
             }
         }
-        buffer = buffer.end();
-        for (i = 0; i < length; i++) {
-            buffer = buffer.begin('tr');
-            if (type === 'column') {
-                buffer = buffer.attr('class', 'level-%@'.fmt(i + 1));
-            }
-            buffer = this._renderRow(buffer, headers[i], type, i);
-            buffer = buffer.end(); // tr
-        }
-        buffer = buffer.end().end(); // table // div
+        buffer.push('</colgroup>');
 
-        return buffer;
+        for (i = 0; i < length; i++) {
+            if (type === 'column') {
+                buffer.push('<tr class="level-%@">'.fmt(i + 1));
+            } else {
+                buffer.push('<tr>');
+            }
+            this._renderRow(buffer, headers[i], type, i);
+            buffer.push('</tr>');
+        }
+
+        buffer.pushClosingTag(); // table
+        buffer.pushClosingTag(); // div
     },
 
     _renderRow: function(buffer, row, type, rowIndex) {
@@ -7022,58 +8088,71 @@ Flame.TableView = Flame.View.extend(Flame.Statechart, {
 
         for (var i = 0; i < length; i++) {
             var header = row[i];
-            buffer = buffer.begin('td');
+            buffer.begin('td');
 
             headerLabel = header.get ? header.get('headerLabel') : header.label;
-            buffer = buffer.attr('title', headerLabel.replace(/<br>/g, '\n'));
+            if (!headerLabel) headerLabel = "";
+            // We have to support <br> for row headers, so we'll replace them back after escaping
+            headerLabel = Ember.Handlebars.Utils.escapeExpression(headerLabel).replace(/&lt;br&gt;/g, '<br>');
+            buffer.attr('title', headerLabel.replace(/<br>/g, '\n'));
 
             if (header.rowspan > 1) {
-                buffer = buffer.attr('rowspan', header.rowspan);
+                buffer.attr('rowspan', header.rowspan);
             }
             if (header.colspan > 1) {
-                buffer = buffer.attr('colspan', header.colspan);
+                buffer.attr('colspan', header.colspan);
             }
 
             label = '<div class="label">%@</div>';
+            var resizeHandle = "";
             buffer.attr('class', (i % 2 === 0 ? "even-col" : "odd-col"));
             if (type === 'column' && !header.hasOwnProperty('children')) { // Leaf node
-                buffer = buffer.attr('data-index', i);
+                buffer.attr('data-index', i);
                 // Mark the leafIndex, so when sorting it's trivial to find the correct field to sort by
-                buffer = buffer.attr('data-leaf-index', header.leafIndex);
+                buffer.attr('data-leaf-index', header.leafIndex);
                 if (this.get('isResizable') && this.get('renderColumnHeader')) {
-                    buffer = buffer.push('<div class="resize-handle">&nbsp;</div>');
+                    resizeHandle = '<div class="resize-handle">&nbsp;</div>';
                 }
 
                 var headerSortDelegate = this.get('tableViewDelegate');
                 if (headerSortDelegate && headerSortDelegate.getSortForHeader) {
-                    sortDirection = headerSortDelegate.getSortForHeader(header);
+                    var activeSort = headerSortDelegate.getSortForHeader(header);
+                    sortDirection = activeSort ? activeSort.direction : null;
                 }
                 var sortClass = sortDirection ? 'sort-%@'.fmt(sortDirection) : '';
-                label = '<div class="label ' + sortClass +'">%@</div>';
+                label = '<div class="label ' + sortClass + '">%@</div>';
             } else if (type === 'row') {
-                buffer = buffer.attr('data-index', header.dataIndex);
+                buffer.attr('data-index', header.dataIndex);
                 if (this.get('renderColumnHeader')) {
                     if (this.get("isResizable")) {
                         if (header.hasOwnProperty('children')) {
                             // Ensure that resize-handle covers the whole height of the cell border. Mere child count
                             // does not suffice with multi-level row headers.
                             var leafCount = countLeaves(header);
-
-                            buffer = buffer.push('<div class="resize-handle" style="height: %@px"></div>'.fmt(leafCount * 21));
+                            resizeHandle = '<div class="resize-handle" style="height: %@px"></div>'.fmt(leafCount * 21);
                         } else {
-                            buffer = buffer.push('<div class="resize-handle"></div>');
+                            resizeHandle = '<div class="resize-handle"></div>';
                         }
                     }
-                    if (this.get("isRowHeaderClickable") && header.get('isClickable')) {
-                        label = '<a href="javascript:void(0)">%@</a>';
+                    if (this.get('isRowHeaderClickable') && header.get('isClickable')) {
+                        label = '%@';
                     }
                 }
             }
-            buffer = buffer.push(label.fmt(headerLabel)).end(); // td
+
+            buffer.pushOpeningTag(); // td
+            buffer.push('<div class="content-container">');
+            buffer.push(resizeHandle);
+            buffer.push(label.fmt(headerLabel));
+            buffer.push('</div>');
+            buffer.pushClosingTag(); // td
         }
-        return buffer;
     }
 });
+
+})();
+(function() {
+'use strict';
 
 Flame.TextAreaView = Flame.View.extend({
     classNames: ['flame-text'],
@@ -7087,6 +8166,8 @@ Flame.TextAreaView = Flame.View.extend({
     placeholder: null,
     isValid: null,
     isVisible: true,
+    isDisabled: false,
+    readonly: false,
 
     becomeKeyResponder: function() {
         this.get('textArea').becomeKeyResponder();
@@ -7098,10 +8179,12 @@ Flame.TextAreaView = Flame.View.extend({
         // Start from a non-validated state. 'isValid' being null means that it hasn't been validated at all (perhaps
         // there's no validator attached) so it doesn't make sense to show it as invalid.
         isValid: null,
-        isInvalid: Flame.computed.equals('isValid', false),
-        valueBinding: '^value',
-        placeholderBinding: '^placeholder',
-        isVisibleBinding: '^isVisible',
+        isInvalid: Ember.computed.equal('isValid', false),
+        value: Ember.computed.alias('parentView.value'),
+        placeholder: Ember.computed.alias('parentView.placeholder'),
+        isVisible: Ember.computed.alias('parentView.isVisible'),
+        disabled: Ember.computed.alias('parentView.isDisabled'),
+        readonly: Ember.computed.alias('parentView.readonly'),
 
         keyDown: function() { return false; },
         keyUp: function() {
@@ -7111,6 +8194,9 @@ Flame.TextAreaView = Flame.View.extend({
     })
 });
 
+})();
+(function() {
+'use strict';
 
 /*
   A child view in a TreeView. In most cases you don't need to extend this, you can instead define
@@ -7130,27 +8216,27 @@ Flame.TreeItemView = Flame.ListItemView.extend({
     isExpanded: function(key, value) {
         if (arguments.length === 1) {
             if (this._isExpanded !== undefined) return this._isExpanded;
-            return this.getPath('content.treeItemIsExpanded') || this.get('defaultIsExpanded');
+            return this.get('content.treeItemIsExpanded') || this.get('defaultIsExpanded');
         } else {
             this._isExpanded = value;
             return value;
         }
-    }.property('content.treeItemIsExpanded', 'defaultIsExpanded').cacheable(),
+    }.property('content.treeItemIsExpanded', 'defaultIsExpanded'),
     layout: { left: 0, right: 0, top: 0, height: 0 },
 
     defaultIsExpanded: function() {
-        return this.getPath('parentView.rootTreeView.defaultIsExpanded');
-    }.property('parentView.rootTreeView.defaultIsExpanded').cacheable(),
+        return this.get('parentView.rootTreeView.defaultIsExpanded');
+    }.property('parentView.rootTreeView.defaultIsExpanded'),
 
     // Don't use the list view isSelected highlight logic
     isSelected: function(key, value) {
         return false;
-    }.property().cacheable(),
+    }.property(),
 
     // This is the highlight logic for tree items, the is-selected class is bound to the flame-tree-item-view-container
     classAttribute: function() {
-        return this.get('content') === this.getPath('parentView.rootTreeView.selection') ? 'flame-tree-item-view-container is-selected' : 'flame-tree-item-view-container';
-    }.property('content', 'parentView.rootTreeView.selection').cacheable(),
+        return this.get('content') === this.get('parentView.rootTreeView.selection') ? 'flame-tree-item-view-container is-selected' : 'flame-tree-item-view-container';
+    }.property('content', 'parentView.rootTreeView.selection'),
 
     // The HTML that we need to produce is a bit complicated, because while nested items should appear
     // indented, the selection highlight should span the whole width of the tree view, and should not
@@ -7160,10 +8246,10 @@ Flame.TreeItemView = Flame.ListItemView.extend({
     //
     // TODO It seems using handlebars templates is quite a bit slower than rendering programmatically,
     //      which is very much noticeable in IE7. Should probably convert to a render method.
-    handlebars: '<div {{bindAttr class="classAttribute"}}><div class="flame-tree-item-view-pad">' +
-            '{{#if hasChildren}}{{view toggleButton}}{{/if}}' +
-            '{{view treeItemViewClass content=content}}</div></div>'+
-            '{{#if renderSubTree}}{{view nestedTreeView}}{{/if}}',
+    handlebars: '<div {{bind-attr class="view.classAttribute"}}><div class="flame-tree-item-view-pad">' +
+            '{{#if view.hasChildren}}{{view view.toggleButton}}{{/if}}' +
+            '{{view view.treeItemViewClass content=view.content}}</div></div>' +
+            '{{#if view.renderSubTree}}{{view view.nestedTreeView}}{{/if}}',
 
     /**
      * Do we want to create the view for the subtree? This will return true if there is a subtree and it has
@@ -7174,7 +8260,7 @@ Flame.TreeItemView = Flame.ListItemView.extend({
      */
     renderSubTree: function() {
         return this.get("hasChildren") && this.get("isExpanded");
-    }.property().cacheable(),
+    }.property(),
 
     /**
      * Force updating of renderSubTree when we need to create the subview.
@@ -7190,17 +8276,15 @@ Flame.TreeItemView = Flame.ListItemView.extend({
     // This view class is responsible for rendering a single item in the tree. It's not the same thing as
     // the itemViewClass, because in the tree view that class is responsible for rendering the item AND
     // possible nested list view, if the item has children.
-    treeItemViewClass: function() {
-        return Flame.View.extend({
-            useAbsolutePosition: false,
-            layout: { top: 0, left: 0, right: 0, height: 20 },
-            classNames: ['flame-tree-item-view-content'],
-            contentIndexBinding: 'parentView.contentIndex',
-            handlebars: function() {
-                return this.getPath('parentView.parentView.rootTreeView').handlebarsForItem(this.get('content'));
-            }.property('content').cacheable()
-        });
-    }.property(),
+    treeItemViewClass: Flame.View.extend({
+        useAbsolutePosition: false,
+        layout: { top: 0, left: 0, right: 0, height: 20 },
+        classNames: ['flame-tree-item-view-content'],
+        contentIndexBinding: 'parentView.contentIndex',
+        handlebars: function() {
+            return this.get('parentView.parentView.rootTreeView').handlebarsForItem(this.get('content'));
+        }.property('content')
+    }),
 
     /**
      * Get the immediate parent-view of all the TreeItemViews that are under this view in the tree. If no child views
@@ -7212,17 +8296,17 @@ Flame.TreeItemView = Flame.ListItemView.extend({
     childListView: function() {
         if (this.get("renderSubTree")) {
             // Is there a nicer way to get in touch with child list? This is a bit brittle.
-            return this.getPath("childViews.lastObject.childViews.firstObject");
+            return this.get('lastObject.firstObject');
         }
         return null;
-    }.property("showsubTree").cacheable(),
+    }.property("showsubTree"),
 
     hasChildren: function() {
-        return !Ember.none(this.getPath('content.treeItemChildren'));
-    }.property('content.treeItemChildren'),
+        return !Ember.isNone(this.get('content.treeItemChildren'));
+    }.property('content.treeItemChildren').volatile(),
 
     mouseUp: function() {
-        if (this.getPath('parentView.rootTreeView.clickTogglesIsExpanded')) {
+        if (this.get('parentView.rootTreeView.clickTogglesIsExpanded')) {
             this.toggleProperty('isExpanded');
         }
         return false;  // Always propagate to ListItemView
@@ -7239,21 +8323,28 @@ Flame.TreeItemView = Flame.ListItemView.extend({
     }),
 
     // The view class for displaying possible nested list view, in case this item has children.
+    // TODO Don't create a new CLASS EACH AND EVERY TIME this property is called! Using just a cacheable won't do
+    // because then a new class would still be created for each instance of a Tree.
     nestedTreeView: function() {
         return Flame.TreeView.extend({
-            useAbsolutePosition: this.getPath('parentView.rootTreeView.useAbsolutePositionForItems'),
+            useAbsolutePosition: this.get('parentView.rootTreeView.useAbsolutePositionForItems'),
             layoutManager: Flame.VerticalStackLayoutManager.create({ topMargin: 0, spacing: 0, bottomMargin: 0 }),
             layout: { top: 0, left: 0, right: 0 },
             classNames: ['flame-tree-view-nested'],
-            isVisible: Flame.computed.bool('parentView.isExpanded'), // Ember isVisible handling considers undefined to be visible
-            allowSelection: this.getPath('parentView.rootTreeView.allowSelection'),
-            allowReordering: this.getPath('parentView.rootTreeView.allowReordering'),
-            content: this.getPath('content.treeItemChildren'),
-            itemViewClass: this.getPath('parentView.rootTreeView.itemViewClass'),
+            isVisible: Ember.computed.bool('parentView.isExpanded'), // Ember isVisible handling considers undefined to be visible
+            allowSelection: this.get('parentView.rootTreeView.allowSelection'),
+            allowReordering: this.get('parentView.rootTreeView.allowReordering'),
+            content: this.get('content.treeItemChildren'),
+            itemViewClass: this.get('parentView.rootTreeView.itemViewClass'),
             isNested: true
         });
-    }.property('content')
+    }.property('content').volatile()
 });
+
+})();
+(function() {
+'use strict';
+
 
 
 
@@ -7274,9 +8365,9 @@ Flame.TreeItemView = Flame.ListItemView.extend({
    - allowReordering: Whether user can reorder items by dragging.
    - handlebarsMap: A map of handlebars templates to use for rendering the items, for each different type. For example:
         handlebarsMap: {
-            'App.Folder': '{{content.name}} ({{content.treeItemChildren.length}} reports)',
-            'App.Report': '{{content.name}}',
-            defaultTemplate: '{{content.title}}'
+            'App.Folder': '{{view.content.name}} ({{view.content.treeItemChildren.length}} reports)',
+            'App.Report': '{{view.content.name}}',
+            defaultTemplate: '{{view.content.title}}'
         }
 
   If you don't want to use handlebars templates for the item views, you can alternatively define property
@@ -7309,8 +8400,8 @@ Flame.TreeView = Flame.ListView.extend({
     },
 
     nestingLevel: function() {
-        return 'level-%@'.fmt(this.getPath('treeLevel'));
-    }.property('treeLevel'),
+        return 'level-%@'.fmt(this.get('treeLevel'));
+    }.property('treeLevel').volatile(),
 
     // Propagates selection to the parent. This way we can make sure that only exactly one of the nested
     // list views is showing a selection (see property isTreeItemSelected in TreeItemView)
@@ -7327,7 +8418,7 @@ Flame.TreeView = Flame.ListView.extend({
     startReordering: function(dragHelper, event) {
         var parentTreeView = this.get('parentTreeView');
         if (parentTreeView) {
-            dragHelper.get('itemPath').insertAt(0, this.getPath('parentView.contentIndex'));
+            dragHelper.get('itemPath').insertAt(0, this.get('parentView.contentIndex'));
             parentTreeView.startReordering(dragHelper, event);
         } else {
             Flame.set('mouseResponderView', this);  // XXX a bit ugly...
@@ -7336,28 +8427,33 @@ Flame.TreeView = Flame.ListView.extend({
     },
 
     treeLevel: function() {
-        return (this.getPath('parentTreeView.treeLevel') || 0) + 1;
-    }.property('parentTreeView.treeLevel'),
+        return (this.get('parentTreeView.treeLevel') || 0) + 1;
+    }.property('parentTreeView.treeLevel').volatile(),
 
     parentTreeView: function() {
-        return this.get('isNested') ? this.getPath('parentView.parentView') : undefined;
-    }.property('isNested', 'parentView.parentView'),
+        return this.get('isNested') ? this.get('parentView.parentView') : undefined;
+    }.property('isNested', 'parentView.parentView').volatile(),
 
     rootTreeView: function() {
-        return this.getPath('parentTreeView.rootTreeView') || this;
-    }.property('parentTreeView.rootTreeView')
+        return this.get('parentTreeView.rootTreeView') || this;
+    }.property('parentTreeView.rootTreeView').volatile()
 
 });
 
+})();
+(function() {
+'use strict';
 
-/*
- * VerticalSplitView divides the current view between leftView and rightView using a vertical
- * dividerView.
- */
+
+
+/**
+  VerticalSplitView divides the current view between leftView and rightView using a vertical
+  dividerView.
+*/
 
 Flame.VerticalSplitView = Flame.SplitView.extend({
-    classNames: 'flame-vertical-split-view'.w(),
-    childViews: 'leftView dividerView rightView'.w(),
+    classNames: ['flame-vertical-split-view'],
+    childViews: ['leftView', 'dividerView', 'rightView'],
     leftWidth: 100,
     rightWidth: 100,
     minLeftWidth: 0,
@@ -7374,15 +8470,8 @@ Flame.VerticalSplitView = Flame.SplitView.extend({
         Ember.assert('Flame.VerticalSplitView needs leftView and rightView!', !!this.get('leftView') && !!this.get('rightView'));
         this._super();
 
-        if (this.get('flex') === 'right') this.rightWidth = undefined;
-        else this.leftWidth = undefined;
-
-        this._updateLayout(); // Update layout according to the initial widths
-
-        this.addObserver('leftWidth', this, this._updateLayout);
-        this.addObserver('rightWidth', this, this._updateLayout);
-        this.addObserver('minLeftWidth', this, this._updateLayout);
-        this.addObserver('minRightWidth', this, this._updateLayout);
+        if (this.get('flex') === 'right') this.set('rightWidth', undefined);
+        else this.set('leftWidth', undefined);
     },
 
     _updateLayout: function() {
@@ -7394,14 +8483,14 @@ Flame.VerticalSplitView = Flame.SplitView.extend({
         var dividerThickness = this.get('dividerThickness');
         var leftWidth = this.get('flex') === 'right' ? this.get('leftWidth') : undefined;
         var rightWidth = this.get('flex') === 'left' ? this.get('rightWidth') : undefined;
-        if (leftWidth === undefined && rightWidth !== undefined && totalWidth !== null) leftWidth = totalWidth - rightWidth - dividerThickness;
-        if (rightWidth === undefined && leftWidth !== undefined && totalWidth !== null) rightWidth = totalWidth - leftWidth - dividerThickness;
+        if (leftWidth === undefined && rightWidth !== undefined && totalWidth !== null && totalWidth !== 0) leftWidth = totalWidth - rightWidth - dividerThickness;
+        if (rightWidth === undefined && leftWidth !== undefined && totalWidth !== null && totalWidth !== 0) rightWidth = totalWidth - leftWidth - dividerThickness;
 
-        if ('number' === typeof leftWidth && leftWidth < this.get('minLeftWidth')) {
+        if (typeof leftWidth === 'number' && leftWidth < this.get('minLeftWidth')) {
             rightWidth += leftWidth - this.get('minLeftWidth');
             leftWidth = this.get('minLeftWidth');
         }
-        if ('number' === typeof rightWidth && rightWidth < this.get('minRightWidth')) {
+        if (typeof rightWidth === 'number' && rightWidth < this.get('minRightWidth')) {
             leftWidth += rightWidth - this.get('minRightWidth');
             rightWidth = this.get('minRightWidth');
         }
@@ -7409,24 +8498,24 @@ Flame.VerticalSplitView = Flame.SplitView.extend({
         this.set('rightWidth', rightWidth);
 
         if (this.get('flex') === 'right') {
-            this._setDimensions(leftView, 0, leftWidth, undefined);
-            this._setDimensions(dividerView, leftWidth, dividerThickness, undefined);
-            this._setDimensions(rightView, leftWidth + dividerThickness, undefined, 0);
+            this._setDimensions(leftView, 0, leftWidth, '');
+            this._setDimensions(dividerView, leftWidth, dividerThickness, '');
+            this._setDimensions(rightView, leftWidth + dividerThickness, '', 0);
         } else {
-            this._setDimensions(leftView, 0, undefined, rightWidth + dividerThickness);
-            this._setDimensions(dividerView, undefined, dividerThickness, rightWidth);
-            this._setDimensions(rightView, undefined, rightWidth, 0);
+            this._setDimensions(leftView, 0, '', rightWidth + dividerThickness);
+            this._setDimensions(dividerView, '', dividerThickness, rightWidth);
+            this._setDimensions(rightView, '', rightWidth, 0);
         }
-    },
+    }.observes('leftWidth', 'rightWidth', 'minLeftWidth', 'minRightWidth'),
 
     _setDimensions: function(view, left, width, right) {
-        var layout = view.get('layout');
-        layout.set('left', left);
-        layout.set('width', width);
-        layout.set('right', right);
-        layout.set('top', 0);
-        layout.set('bottom', 0);
-
+        view.get('layout').setProperties({
+            left: left,
+            width: width,
+            right: right,
+            top: 0,
+            bottom: 0
+        });
         view.updateLayout();
     },
 
@@ -7464,56 +8553,20 @@ Flame.VerticalSplitView = Flame.SplitView.extend({
         }
     }
 });
-Flame.Repeater = Ember.Object.extend(Flame.ActionSupport, {
-    init: function() {
-        this._super();
-        this._scheduleNext();
-    },
 
-    stop: function() {
-        Ember.run.cancel(this._timer);
-    },
+})();
+(function() {
+'use strict';
 
-    reschedule: function() {
-        this.stop();
-        this._scheduleNext();
-    },
-
-    _scheduleNext: function() {
-        //Use (new Date()).getTime() instead of Date.now() for IE-support.
-        var wait;
-
-        if (this.get('interval') === 0) {
-            wait = 0;
-        } else {
-            var lastInvocation = this.get('lastInvoke');
-            if (Ember.none(lastInvocation)) {
-                wait = this.get('interval');
-            } else {
-                wait = (new Date()).getTime() - lastInvocation + this.get('interval');
-            }
-
-            if (wait < 0) {
-                wait = 0;
-            }
-        }
-
-        this._timer = Ember.run.later(this, function() {
-            this.set('lastInvoke', (new Date()).getTime());
-            this.fireAction();
-            this._scheduleNext();
-        }, wait);
-    }
-});
 
 
 
 Flame.Validator = Ember.Object.extend({
     /**
-     @param {Object} target the target object
-     @param {String} key the target object property
-     @returns {Boolean} validation status
-     */
+      @param {Object} target the target object
+      @param {String} key the target object property
+      @returns {Boolean} validation status
+    */
     validate: function(target, key) {
         return true;
     },
@@ -7523,31 +8576,30 @@ Flame.Validator = Ember.Object.extend({
     },
 
     /**
-     @returns {String} the property which the validator will set the result of the validation.
-     */
+      @returns {String} the property which the validator will set the result of the validation.
+    */
     isValidProperty: function(key) {
         return key + 'IsValid';
     }
 });
 
 /**
- *  Mix this in to your model object to perform on the fly validation.
- *  You must provide a 'validations' hash, with the keys defining each property of your model to validate,
- *  and the values the validation logic.
- *
- *  The validation logic should be defined either as a Flame validator singleton, an anonymous function, or a hash.
- *
- *  Validation is done on-demand, demand being the first call to foo.get("barIsValid") or foo.get("isValid").
- *  Thus we don't validate stuff that just goes to DataStore but only the thing we use and about whose validity we're
- *  interested in.
- *
- *  If you define 'Coupled properties' for a property foo, this means that when foo has changed, we need to revalidate not
- *  just foo but also each coupled property. For example, if we have properties password and passwordCheck, when we
- *  edit password we need to revalidate the validation for passwordCheck also.
- *
- *  Validations can only be set once to the object (this is usually done in the definition of the objects class).
- *
- */
+  Mix this in to your model object to perform on the fly validation.
+  You must provide a 'validations' hash, with the keys defining each property of your model to validate,
+  and the values the validation logic.
+
+  The validation logic should be defined either as a Flame validator singleton, an anonymous function, or a hash.
+
+  Validation is done on-demand, demand being the first call to foo.get("barIsValid") or foo.get("isValid").
+  Thus we don't validate stuff that just goes to DataStore but only the thing we use and about whose validity we're
+  interested in.
+
+  If you define 'Coupled properties' for a property foo, this means that when foo has changed, we need to revalidate not
+  just foo but also each coupled property. For example, if we have properties password and passwordCheck, when we
+  edit password we need to revalidate the validation for passwordCheck also.
+
+  Validations can only be set once to the object (this is usually done in the definition of the objects class).
+*/
 Flame.Validatable = Ember.Mixin.create({
     _propertyValidity: null,
     _objectIsValid: null,
@@ -7559,7 +8611,7 @@ Flame.Validatable = Ember.Mixin.create({
 
     // The observer calls this method with a value, so we have to add ignoreCoupledProperties afterwards
     validateProperty: function(target, key, value, ignoreCoupledProperties) {
-        if (Ember.none(ignoreCoupledProperties)) {
+        if (Ember.isNone(ignoreCoupledProperties)) {
             ignoreCoupledProperties = false;
         }
         if (value === undefined) {
@@ -7588,7 +8640,7 @@ Flame.Validatable = Ember.Mixin.create({
         // Coupled properties are properties that should be revalidated if the original property changes
         if (!ignoreCoupledProperties && coupledProperties) {
             if (!jQuery.isArray(coupledProperties)) {
-                throw "Hint: coupledProperties must be an array!";
+                throw new Error('Hint: coupledProperties must be an array!');
             }
             for (var j = 0; j < coupledProperties.length; j++) {
                 var coupledProperty = coupledProperties[j];
@@ -7610,25 +8662,28 @@ Flame.Validatable = Ember.Mixin.create({
             }
         }
         return invalids;
-    }.property(),
+    }.property().volatile(),
 
     _validate: function(validator, target, key, value) {
         var isValid = null;
         if (validator instanceof Flame.Validator) {
             isValid = validator.validate(target, key);
-        } else if (!Ember.none(validator)) {
-            //if not Flame.Validator, assume function
+        } else if (!Ember.isNone(validator)) {
+            // if not Flame.Validator, assume function
             isValid = validator.call(this, value);
         }
         return isValid;
     },
 
     /**
-     @returns {Boolean} to indicate if all properties of model are valid.
-     **/
-    _checkValidity: function() {
+      @returns {Boolean} to indicate if all properties of model are valid.
+    */
+    _checkValidity: function(forceRevalidation) {
         var validations = this.get("validations");
         for (var key in validations) {
+            if (forceRevalidation) {
+                this.validateProperty(this, key, this.get(key));
+            }
             if (validations.hasOwnProperty(key) && this.get(this.isValidProperty(key)) !== true) {
                 return false;
             }
@@ -7644,30 +8699,29 @@ Flame.Validatable = Ember.Mixin.create({
             this._objectIsValid = this._checkValidity();
         }
         return this._objectIsValid;
-    }.property(),
+    }.property().volatile(),
 
     /**
-     * Allow setting of validations only once. Validations set through this property are ignored after they've been
-     * set once.
-     */
+      Allow setting of validations only once. Validations set through this property are ignored after they've been
+      set once.
+    */
     validations: function(key, val) {
-        if (!Ember.none(val)) {
+        if (!Ember.isNone(val)) {
             if (this._validations === null) {
                 this._validations = val;
             } else {
-                Ember.Logger.info("Trying to set validations after the validations have already been set!");
+                Ember.Logger.info('Trying to set validations after the validations have already been set!');
             }
         }
         return this._validations;
-    }.property(),
+    }.property().volatile(),
 
     /**
-     * Create all the *isValid properties this object should have based on its validations-property.
-     */
+      Create all the *isValid properties this object should have based on its validations-property.
+    */
     _createIsValidProperties: function() {
-        var validations = this.get("validations");
+        var validations = this.get('validations');
         var propertyName;
-        var self = this;
         // TODO do this without setting computer properties, using only simple properties (i.e. the kind 'foo' is when
         // defined like Ember.Object({foo: false}).
         for (propertyName in validations) {
@@ -7684,31 +8738,34 @@ Flame.Validatable = Ember.Mixin.create({
     },
 
     _createIsValidProperty: function(propertyName) {
-        if (this._propertyValidity === null) { this._propertyValidity = {}; }
+        if (this._propertyValidity === null) this._propertyValidity = {};
         var self = this;
-        Ember.defineProperty(this, this.isValidProperty(propertyName), Ember.computed(
-                function(propertyIsValidName, value) {
-                    // Emulate common property behaviour where setting undefined value does nothing.
-                    if (typeof value !== "undefined") {
-                        self.propertyWillChange(propertyIsValidName);
-                        self._propertyValidity[propertyIsValidName] = value;
-                        self.propertyDidChange(propertyIsValidName);
-                    }
-                    return self._propertyValidity[propertyIsValidName];
-                }
-        ).property());
+        Ember.defineProperty(this, this.isValidProperty(propertyName), Ember.computed(function(propertyIsValidName, value) {
+            // Emulate common property behaviour where setting undefined value does nothing.
+            if (typeof value !== "undefined") {
+                self.propertyWillChange(propertyIsValidName);
+                self._propertyValidity[propertyIsValidName] = value;
+                self.propertyDidChange(propertyIsValidName);
+            }
+            return self._propertyValidity[propertyIsValidName];
+        }).property().volatile());
     },
 
     /**
-     * Add validation for
-     * @param {String} propertyName Name of the property we want to validate.
-     * @param {Object} validator Flame.Validator or function that will handle the validation of this property.
-     */
+      Add validation for
+      @param {String} propertyName Name of the property we want to validate.
+      @param {Object} validator Flame.Validator or function that will handle the validation of this property.
+    */
     setValidationFor: function(propertyName, validator) {
         // TODO do this without setting computed properties, using only simple properties (i.e. the kind 'foo' is when
         // defined with Ember.Object({foo: false}).
 
-        var validations = this.get("validations");
+        var validations = this.get('validations');
+        if (validations === this.constructor.prototype.validations || validations === null) {
+            // ensure that setValidationFor does not mess with prototype-defined validations
+            validations = jQuery.extend({}, validations);
+            this.set('validations', validations);
+        }
         validations[propertyName] = validator;
         this._createIsValidProperty(propertyName);
         this.removeObserver(propertyName, this, 'validateProperty'); // In case we're redefining the validation
@@ -7718,7 +8775,7 @@ Flame.Validatable = Ember.Mixin.create({
 
     unknownProperty: function(key) {
         var res = /^(.+)IsValid$/.exec(key);
-        var validations = this.get("validations");
+        var validations = this.get('validations');
         if (res && validations) {
             var propertyName = res[1];
             if (validations[propertyName]) {
@@ -7726,14 +8783,15 @@ Flame.Validatable = Ember.Mixin.create({
                 return this.get(key);
             }
         }
+
         // Standard bailout, either the property wasn't of the form fooIsValid or we don't have property foo in
         // this.validations.
-        return this._super(key);
+        if (this.__nextSuper) return this._super(key);
     },
 
     setUnknownProperty: function(key, value) {
         var res = /^(.+)IsValid$/.exec(key);
-        var validations = this.get("validations");
+        var validations = this.get('validations');
         if (res && validations) {
             var propertyName = res[1];
             if (validations[propertyName]) {
@@ -7743,43 +8801,70 @@ Flame.Validatable = Ember.Mixin.create({
         }
         // Standard bailout, either the property wasn't of the form fooIsValid or we don't have property foo in
         // this.validations.
-        return this._super(key, value);
+        if (this.__nextSuper) return this._super(key, value);
+
+        Ember.defineProperty(this, key);
+        return this.set(key, value);
     }
 });
 
+})();
+(function() {
+'use strict';
+
 Flame.Validator.association = Flame.Validator.create({
-   validate: function(target, key) {
-       var association = target.get(key);
-       if (Ember.isArray(association)) {
-           return association.every(function(assoc) { return assoc.get('isValid'); });
-       } else if (association) {
-           return association.get('isValid');
-       } else {
-           return true;
-       }
-   }
-});
-Flame.Validator.email = Flame.Validator.create({
-    validate: function(target, key) {
-        var pattern = /^(([A-Za-z0-9]+_+)|([A-Za-z0-9]+\-+)|([A-Za-z0-9]+\.+)|([A-Za-z0-9]+\++))*[A-Za-z0-9\-]+@((\w+\-+)|(\w+\.))*\w{1,63}\.[a-zA-Z]{2,6}$/i;
-        var string = target.get(key);
-        return pattern.test(string);
+    validate: function(target, key, forceRevalidation) {
+        if (forceRevalidation === undefined) {
+            forceRevalidation = false;
+        }
+        var association = target.get(key);
+        if (Ember.isArray(association)) {
+            return association.every(function(assoc) { return forceRevalidation ? assoc._checkValidity(true) : assoc.get('isValid'); });
+        } else if (association) {
+            return forceRevalidation ? association._checkValidity(true) : association.get('isValid');
+        } else {
+            return true;
+        }
     }
 });
-Flame.Validator.notBlank = Flame.Validator.create({
-   validate: function(target, key) {
-       var string = target.get(key);
-       if (string) {
-           return !string.toString().isBlank();
-       } else {
-           return false;
-       }
-   }
+
+})();
+(function() {
+'use strict';
+
+var pattern = /^(([A-Za-z0-9]+_+)|([A-Za-z0-9]+\-+)|([A-Za-z0-9]+\.+)|([A-Za-z0-9]+\++))*[A-Za-z0-9\-]+@((\w+\-+)|(\w+\.))*\w{1,63}\.[a-zA-Z]{2,6}$/i;
+
+Flame.Validator.email = Flame.Validator.create({
+    validate: function(target, key) {
+        return pattern.test(target.get(key));
+    }
 });
+
+})();
+(function() {
+'use strict';
+
+Flame.Validator.notBlank = Flame.Validator.create({
+    validate: function(target, key) {
+        return !Ember.isBlank(target.get(key));
+    }
+});
+
+})();
+(function() {
+'use strict';
+
 Flame.Validator.number = Flame.Validator.create({
     validate: function(target, key) {
         var value = target.get(key);
         return (value === '') || !(isNaN(value) || isNaN(parseFloat(value)));
     }
 });
-Flame.VERSION = '0.2.1-184-gd108cf1';
+
+})();
+(function() {
+'use strict';
+
+Flame.VERSION = '0.2.1-535-g2af37d9';
+
+})();
